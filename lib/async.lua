@@ -84,6 +84,59 @@ function async.wrap_sync(fn)
     end
 end
 
+
+--- Executes a list of asynchronous functions in series.
+--
+-- `waterfall` accepts an arbitrary list of asynchronous functions (tasks) and calls them in series.
+-- Each function waits for the previous one to finish and will be given the previous function's return values.
+--
+-- If an error occurs in any task, execution is stopped immediately, and the final callback is called
+-- with the error value.
+-- If all tasks complete successfully, the final callback will be called with the return values of the last
+-- task in the list.
+--
+-- All tasks must adhere to the callback signature: `function(err, values...)`.
+--
+-- @tparam table tasks The asynchronous tasks to execute in series.
+-- @tparam function final_callback Called when all tasks have finished.
+-- @asynctreturn any err The error returned by a failing task.
+-- @asynctreturn any ... Values as returned by the last task.
+function async.waterfall(tasks, final_callback)
+    final_callback = async.once(final_callback)
+
+    -- Bail early if there is nothing to do
+    if not next(tasks) then
+        final_callback()
+        return
+    end
+
+    local i = 0
+    local _run
+    local _continue
+
+    _run = function(...)
+        i = i + 1
+        local task = tasks[i]
+        if task then
+            task(_continue, ...)
+        else
+            -- We've reached the bottom of the waterfall, time to exit
+            final_callback(nil, ...)
+        end
+    end
+
+    _continue = function(err, ...)
+        if err then
+            final_callback(err)
+            return
+        end
+
+        _run(...)
+    end
+
+    _continue()
+end
+
 --- Wrap a function with arguments for use as callback.
 --
 -- This is mainly used to provide a (partial) list of arguments to a callback function.
