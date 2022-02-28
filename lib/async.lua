@@ -256,6 +256,60 @@ function async.dag(tasks, final_callback)
     _check_pending(tasks)
 end
 
+
+--- Repeatedly calls `test` and `iteratee` until stopped.
+--
+-- `iteratee` is called repeatedly. It is passed a callback
+-- (`function(err, ...)`), which should be called with either an error or any
+-- results of the iteration.
+-- `test` is called once per iteration, after `iteratee`. It is passed a
+-- callback (`function(err, stop)`) and any non-error values from `iteratee`.
+-- The callback should be called with either an error or a boolean value.
+-- Iteration will stop when an error is passed by either callback or when
+-- `test` passes a falsy value.
+-- In either case `final_callback` will be called with the latest results from
+-- `iteratee`.
+--
+-- This is, in concept, analogous to a `do {} while ()` construct, where `iteratee`
+-- is the `do` block and `test` is the `while` test.
+--
+-- @tparam function iteratee Called repeatedly. Signature: `function(cb)`.
+-- @tparam function test Called once per iteration, after `iteratee`.
+--    Signature: `function(cb, ...)`.
+-- @tparam function final_callback Called once, when `test` indicates to stop
+--    the iteration.
+function async.do_while(iteratee, test, final_callback)
+    final_callback = async.once(final_callback)
+    local results = {}
+    local _next
+
+    -- Wraps `test` to break on errors and capture results
+    local function _test(err, ...)
+        if err then
+            return final_callback(err)
+        end
+
+        results = table.pack(...)
+        test(_next, ...)
+    end
+
+    -- Calls `iteratee` for the next iteration, unless stopped
+    _next = function(err, continue)
+        if err then
+            return final_callback(err)
+        end
+
+        if not continue then
+            final_callback(nil, table.unpack(results))
+        end
+
+        iteratee(_test)
+    end
+
+    _next(nil, true)
+end
+
+
 --- Wrap a function with arguments for use as callback.
 --
 -- This is mainly used to provide a (partial) list of arguments to a callback function.
