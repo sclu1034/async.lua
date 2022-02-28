@@ -137,6 +137,51 @@ function async.waterfall(tasks, final_callback)
     _continue()
 end
 
+
+--- Runs all tasks in parallel and collects the results.
+--
+-- If any task produces an error, `final_callback` will be called immediately
+-- and remaining tasks will not be tracked.
+--
+-- @tparam table tasks A list of asynchronous functions. They will be given a
+--    callback parameter: `function(err, ...)`.
+-- @tparam function final_callback
+function async.all(tasks, final_callback)
+    final_callback = async.once(final_callback)
+
+    local len = #tasks
+    if len == 0 then
+        final_callback()
+        return
+    end
+
+    local results = {}
+    local done = 0
+    local cancelled = false
+
+    for i, task in ipairs(tasks) do
+        task(function(err, ...)
+            if cancelled then
+                return
+            end
+
+            if err then
+                cancelled = true
+                final_callback(err)
+                return
+            end
+
+            done = done + 1
+            results[i] = table.pack(...)
+
+            if done == len then
+                final_callback(nil, results)
+            end
+        end)
+    end
+end
+
+
 --- Resolves a DAG (Directed Acyclic Graph) of asynchronous dependencies.
 --
 -- The task list is a key-value map, where the key defines the task name and the value the is the task definition.
