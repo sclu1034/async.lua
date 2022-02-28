@@ -29,6 +29,8 @@
 --     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---------------------------------------------------------------------------
 
+local table_extra = require("./internal/table")
+
 local async = {}
 
 
@@ -55,5 +57,30 @@ function async.once(fn)
     end
 end
 
+--- Wrap a function with arguments for use as callback.
+--
+-- This is mainly used to provide a (partial) list of arguments to a callback function.
+-- Arguments to this call are passed through to the provided function when it is called.
+-- Arguments from the caller are appended after those.
+--
+-- @todo Optimize the common use cases of only having a few outer arguments
+-- by hardcoding those cases.
+--
+-- @tparam function fn The function to wrap.
+-- @tparam any ... Arbitrary arguments to pass through to the wrapped function.
+-- @treturn function
+function async.callback(fn, ...)
+    local outer = table.pack(...)
+
+    return function(cb, ...)
+        local inner = table.pack(...)
+        -- Merge, then unpack both argument tables to provide a single var arg.
+        -- But keep the returned callback first, for consistency across APIs.
+        local args = { cb }
+        table_extra.append(args, outer)
+        table_extra.append(args, inner)
+        return fn(table.unpack(args))
+    end
+end
 
 return async
