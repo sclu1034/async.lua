@@ -195,6 +195,8 @@ end
 -- is called with that error value. Otherwise, `final_callback` will be called once all tasks have completed, with the
 -- results of all tasks.
 --
+-- <%EXAMPLE_dag%>
+--
 -- @tparam table tasks A map of asynchronous tasks.
 -- @tparam function final_callback
 function async.dag(tasks, final_callback)
