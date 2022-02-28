@@ -57,6 +57,33 @@ function async.once(fn)
     end
 end
 
+
+--- Turns an asynchronous function into a blocking operation.
+--
+-- Using coroutines, this runs a callback-style asynchronous function and blocks until it completes.
+-- The function to be wrapped may only accept a single parameter: a callback function.
+-- Return values passed to this callback will be returned as regular values by `wrap_sync`.
+--
+-- Panics that happened inside the asynchronous function will be captured and re-thrown.
+--
+-- @tparam function fn An asynchronous function: `function(cb)`
+-- @treturn ... Any return values as passed by the wrapped function
+function async.wrap_sync(fn)
+    local co = coroutine.create(function()
+        fn(function(...)
+            coroutine.yield(...)
+        end)
+    end)
+
+    local ret = table.pack(coroutine.resume(co))
+    if not ret[1] then
+        error(ret[2])
+    else
+        table.remove(ret, 1)
+        return table.unpack(ret)
+    end
+end
+
 --- Wrap a function with arguments for use as callback.
 --
 -- This is mainly used to provide a (partial) list of arguments to a callback function.
