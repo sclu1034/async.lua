@@ -137,6 +137,125 @@ function async.waterfall(tasks, final_callback)
     _continue()
 end
 
+--- Resolves a DAG (Directed Acyclic Graph) of asynchronous dependencies.
+--
+-- The task list is a key-value map, where the key defines the task name and the value the is the task definition.
+-- A task definition consists of a a list of dependencies (which may be empty) and an asynchronous
+-- function.
+-- Any task name may be used as dependency for any other task, as long as no loops are created.
+-- A task's function will be called once all of its dependencies have become available and will be passed a `results`
+-- table that contains the values returned by all tasks so far.
+--
+-- If any tasks passes an error to its callback, execution and tracking for all other tasks stops and `final_callback`
+-- is called with that error value. Otherwise, `final_callback` will be called once all tasks have completed, with the
+-- results of all tasks.
+--
+-- @tparam table tasks A map of asynchronous tasks.
+-- @tparam function final_callback
+function async.dag(tasks, final_callback)
+    final_callback = async.once(final_callback)
+
+    -- Short-circuit if there is nothing to do.
+    -- To provide consistent API, pass a `results` table
+    if not next(tasks) then
+        final_callback(nil, {})
+        return
+    end
+
+    local results = {}
+    local queue = {}
+    local queue_len = 0
+    local running = 0
+    local pending = {}
+    local cancelled = false
+
+    local _run_queue
+
+    local function _enqueue(name, fn)
+        if queue[name] then
+            error(string.format("task with name '%s' already in queue", name))
+            return
+        end
+
+        queue[name] = fn
+        queue_len = queue_len + 1
+        -- When queued for execution, it is no longer waiting for dependencies
+        pending[name] = nil
+    end
+
+    local function _initialize(name, task)
+        -- Short-circuit for tasks without dependencies
+        if type(task) == "function" then
+            _enqueue(name, task)
+            return
+        elseif #task == 1 then
+            _enqueue(name, task[1])
+            return
+        end
+
+        local dependencies = table_extra.slice(task, 1, -1)
+        local ready = table_extra.all(dependencies, function(name)
+            return results[name] ~= nil
+        end)
+
+        if ready then
+            _enqueue(name, task[#task])
+        else
+            pending[name] = task
+        end
+    end
+
+    local function _check_pending(tasks)
+        for name, task in pairs(tasks) do
+            _initialize(name, task)
+        end
+
+        -- When there are tasks waiting for dependencies, but none in the queue
+        -- and none actively running, we must have reached a deadlock
+        if queue_len == 0 and running == 0 and next(pending) then
+            local err = "deadlock detected. the following tasks are waiting for dependencies: "
+            for name in pairs(pending) do
+                err = err .. string.format(" %s", name)
+            end
+            error(err)
+            return
+        end
+
+        _run_queue()
+    end
+
+    _run_queue = function()
+        for name, fn in pairs(queue) do
+            queue[name] = nil
+            queue_len = queue_len - 1
+            running = running + 1
+
+            fn(function(err, ...)
+                if cancelled then
+                    -- Another, concurrent task already finished with an error
+                    return
+                elseif err then
+                    cancelled = true
+                    final_callback(err, results)
+                    return
+                end
+
+                results[name] = table.pack(...)
+                running = running - 1
+
+                -- If all lists are empty, we must have run all tasks
+                if queue_len == 0 and running == 0 and not next(pending) then
+                    final_callback(nil, results)
+                else
+                    _check_pending(pending)
+                end
+            end, results)
+        end
+    end
+
+    _check_pending(tasks)
+end
+
 --- Wrap a function with arguments for use as callback.
 --
 -- This is mainly used to provide a (partial) list of arguments to a callback function.
