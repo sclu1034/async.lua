@@ -10,5 +10,8 @@ doc:
 busted *ARGS:
     busted --config-file=.busted.lua --helper=tests/_helper.lua {{ARGS}} tests
 
+make version="scm-1":
+    luarocks --local make rocks/async.lua-{{version}}.rockspec
+
 clean:
     rm -r "{{outdir}}"
