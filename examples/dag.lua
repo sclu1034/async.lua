@@ -10,7 +10,7 @@ async.dag(
         write_data = { "get_data", "make_folder", function(cb, results)
             local data = table.unpack(results.get_data)
             local f = fs.open("/tmp/bar/foo.txt")
-            fs.write(data)
+            f:write(data)
         end },
     },
     function(err, results)

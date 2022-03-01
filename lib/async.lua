@@ -11,22 +11,7 @@
 -- behavior, unless explicitly documented by the calling function.
 --
 -- @module async
--- @license
---     async.lua is a set of utilities for callback-style asynchronous Lua
---     Copyright (C) 2022  Lucas Schwiderski
---
---     This program is free software: you can redistribute it and/or modify
---     it under the terms of the GNU General Public License as published by
---     the Free Software Foundation, either version 3 of the License, or
---     (at your option) any later version.
---
---     This program is distributed in the hope that it will be useful,
---     but WITHOUT ANY WARRANTY; without even the implied warranty of
---     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
---     GNU General Public License for more details.
---
---     You should have received a copy of the GNU General Public License
---     along with this program.  If not, see <https://www.gnu.org/licenses/>.
+-- @license GPLv3-or-later
 ---------------------------------------------------------------------------
 
 local table_extra = require("./internal/table")
@@ -44,7 +29,7 @@ local async = {}
 -- @treturn function The wrapped function or a noop.
 function async.once(fn)
     if not fn then
-        fn = function(...) end -- luacheck: no unused args
+        fn = function() end
     end
 
     local ran = false
@@ -67,7 +52,7 @@ end
 -- Panics that happened inside the asynchronous function will be captured and re-thrown.
 --
 -- @tparam function fn An asynchronous function: `function(cb)`
--- @treturn ... Any return values as passed by the wrapped function
+-- @treturn any Any return values as passed by the wrapped function
 function async.wrap_sync(fn)
     local co = coroutine.create(function()
         fn(function(...)
@@ -95,7 +80,7 @@ end
 -- If all tasks complete successfully, the final callback will be called with the return values of the last
 -- task in the list.
 --
--- All tasks must adhere to the callback signature: `function(err, values...)`.
+-- All tasks must adhere to the callback signature: `function(err, ...)`.
 --
 -- @tparam table tasks The asynchronous tasks to execute in series.
 -- @tparam function final_callback Called when all tasks have finished.
@@ -144,7 +129,7 @@ end
 -- and remaining tasks will not be tracked.
 --
 -- @tparam table tasks A list of asynchronous functions. They will be given a
---    callback parameter: `function(err, ...)`.
+--  callback parameter: `function(err, ...)`.
 -- @tparam function final_callback
 function async.all(tasks, final_callback)
     final_callback = async.once(final_callback)
@@ -195,10 +180,14 @@ end
 -- is called with that error value. Otherwise, `final_callback` will be called once all tasks have completed, with the
 -- results of all tasks.
 --
+-- The `results` table uses the task name as key and provides a `table.pack`ed list of task results as value.
+--
 -- <%EXAMPLE_dag%>
 --
 -- @tparam table tasks A map of asynchronous tasks.
 -- @tparam function final_callback
+-- @asynctreturn any err Any error from a failing task.
+-- @asynctreturn table results Results of all resolved tasks.
 function async.dag(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -309,11 +298,13 @@ end
 -- `iteratee` is called repeatedly. It is passed a callback
 -- (`function(err, ...)`), which should be called with either an error or any
 -- results of the iteration.
+--
 -- `test` is called once per iteration, after `iteratee`. It is passed a
 -- callback (`function(err, stop)`) and any non-error values from `iteratee`.
 -- The callback should be called with either an error or a boolean value.
 -- Iteration will stop when an error is passed by either callback or when
 -- `test` passes a falsy value.
+--
 -- In either case `final_callback` will be called with the latest results from
 -- `iteratee`.
 --
@@ -322,9 +313,11 @@ end
 --
 -- @tparam function iteratee Called repeatedly. Signature: `function(cb)`.
 -- @tparam function test Called once per iteration, after `iteratee`.
---    Signature: `function(cb, ...)`.
+--  Signature: `function(cb, ...)`.
 -- @tparam function final_callback Called once, when `test` indicates to stop
---    the iteration.
+--  the iteration.
+-- @asynctreturn any err Any error from `iteratee` or `test`.
+-- @asynctreturn any ... Values passed by the most recent execution of `iteratee`.
 function async.do_while(iteratee, test, final_callback)
     final_callback = async.once(final_callback)
     local results = {}
