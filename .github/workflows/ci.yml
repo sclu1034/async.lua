@@ -1,0 +1,42 @@
+name: Check
+
+on:
+  push:
+    branches: ['master']
+  pull_request:
+      branches: [ master ]
+
+defaults:
+  run:
+    # GitHub Actions adds `errexit` and `pipefail` by default, but we add `xtrace`
+    # to improve debugging the scripts.
+    shell: /bin/bash -o errexit -o pipefail -o xtrace {0}
+
+env:
+  CI: true
+  DEBIAN: noninteractive
+
+jobs:
+  check:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends luarocks
+          sudo -H luarocks install busted
+          sudo -H luarocks install luacheck
+
+      - name: Install task runner
+        run: |
+          mkdir ~/just && cd ~/just
+          wget https://github.com/casey/just/releases/download/1.0.1/just-1.0.1-x86_64-unknown-linux-musl.tar.gz
+          tar -xvf just-1.0.1-x86_64-unknown-linux-musl.tar.gz
+          sudo install ./just /usr/local/bin/just
+
+      - name: Run checks
+        run: |
+          just ci

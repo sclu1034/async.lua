@@ -1,0 +1,47 @@
+name: Deploy docs
+
+on:
+  push:
+    branches: ['master']
+
+defaults:
+  run:
+    # GitHub Actions adds `errexit` and `pipefail` by default, but we add `xtrace`
+    # to improve debugging the scripts.
+    shell: /bin/bash -o errexit -o pipefail -o xtrace {0}
+
+env:
+  DEBIAN: noninteractive
+
+jobs:
+  deploy-docs:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.4.0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends luarocks
+          sudo -H luarocks install ldoc
+          sudo -H luarocks install lua-discount
+
+      - name: Install task runner
+        run: |
+          mkdir ~/just && cd ~/just
+          wget https://github.com/casey/just/releases/download/1.0.1/just-1.0.1-x86_64-unknown-linux-musl.tar.gz
+          tar -xvf just-1.0.1-x86_64-unknown-linux-musl.tar.gz
+          sudo install ./just /usr/local/bin/just
+
+      - name: Generate documentation
+        run: |
+          just doc
+          # Tell GitHub that we don't use Jekyll
+          touch out/doc/.nojekyll
+
+      - name: Deploy to gh-pages
+        uses: JamesIves/github-pages-deploy-action@v4.2.5
+        with:
+          branch: gh-pages
+          folder: out/doc
