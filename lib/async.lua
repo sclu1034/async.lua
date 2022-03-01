@@ -14,7 +14,7 @@
 -- @license GPLv3-or-later
 ---------------------------------------------------------------------------
 
-local table_extra = require("./internal/table")
+local table_extra = require("async.internal.table")
 
 local async = {}
 
