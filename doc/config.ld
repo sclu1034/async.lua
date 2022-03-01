@@ -29,11 +29,6 @@ custom_tags = {
     {
         "asynctreturn",
         title = "Callback parameters",
-        format = format_asynctreturn,
-        {
-            { name = "type" },
-            { name = "name" },
-            { name = "description" },
-        }
+        format = format_asynctreturn
     }
 }
