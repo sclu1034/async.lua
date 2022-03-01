@@ -352,24 +352,29 @@ end
 
 --- Wrap a function with arguments for use as callback.
 --
--- This is mainly used to provide a (partial) list of arguments to a callback function.
--- Arguments to this call are passed through to the provided function when it is called.
--- Arguments from the caller are appended after those.
+-- This may be used to wrap a function or table method as a callback, providing a (partial)
+-- argument list.
+-- Arguments to this call are passed through to the provided function when it is called,
+-- arguments from the final caller are appended after those.
+--
+-- If the function is actually a method (i.e. it expects a `self` parameter or is called with `:`),
+-- the `self` table can be passed as the first argument. Otherwise, `nil` should be passed.
 --
 -- @todo Optimize the common use cases of only having a few outer arguments
 -- by hardcoding those cases.
 --
+-- @tparam[opt] table object The object to call the method on.
 -- @tparam function fn The function to wrap.
 -- @tparam any ... Arbitrary arguments to pass through to the wrapped function.
 -- @treturn function
-function async.callback(fn, ...)
+function async.callback(object, fn, ...)
     local outer = table.pack(...)
 
     return function(cb, ...)
         local inner = table.pack(...)
         -- Merge, then unpack both argument tables to provide a single var arg.
         -- But keep the returned callback first, for consistency across APIs.
-        local args = { cb }
+        local args = { object, cb }
         table_extra.append(args, outer)
         table_extra.append(args, inner)
         return fn(table.unpack(args))
