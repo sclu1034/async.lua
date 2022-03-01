@@ -1,0 +1,460 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>async.lua</h1>
+
+
+
+
+
+<h2>Source</h2>
+<ul class="nowrap">
+  <li><strong>async.lua</strong></li>
+</ul>
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../index.html">async</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+    <h2>async.lua</h2>
+<pre>
+<span class="comment">---------------------------------------------------------------------------
+</span><span class="comment">--- Utilities to work with asynchronous callback-style control flow.
+</span><span class="comment">--
+</span><span class="comment">-- All callbacks must adhere to the callback signature: `function(err, values...)`.
+</span><span class="comment">-- The first parameter is the error value. It will be `nil` if no error ocurred, otherwise
+</span><span class="comment">-- the error value depends on the function that the callback was passed to.
+</span><span class="comment">-- If no error ocurred, an arbitrary number of return values may be received as second parameter and onward.
+</span><span class="comment">--
+</span><span class="comment">-- Depending on the particular implementation of a function that a callback is passed to, it may be possible to
+</span><span class="comment">-- receive non-`nil` return values, even when an error ocurred. Using such return values should be considered undefined
+</span><span class="comment">-- behavior, unless explicitly documented by the calling function.
+</span><span class="comment">--
+</span><span class="comment">-- @module async
+</span><span class="comment">-- @license GPLv3-or-later
+</span><span class="comment">---------------------------------------------------------------------------
+</span>
+<span class="keyword">local</span> table_extra = <span class="global">require</span>(<span class="string">"./internal/table"</span>)
+
+<span class="keyword">local</span> async = {}
+
+
+<span class="comment">--- Wraps a function such that it can only ever be called once.
+</span><span class="comment">--
+</span><span class="comment">-- If the returned function is called multiple times, only the first call will result
+</span><span class="comment">-- in the wrapped function being called. Subsequent calls will be ignored.
+</span><span class="comment">-- If no function is given, a noop function will be used.
+</span><span class="comment">--
+</span><span class="comment">-- @tparam[opt] function fn The function to wrap.
+</span><a id="30"></a><span class="comment">-- @treturn function The wrapped function or a noop.
+</span><span class="keyword">function</span> async.once(fn)
+    <span class="keyword">if</span> <span class="keyword">not</span> fn <span class="keyword">then</span>
+        fn = <span class="keyword">function</span>() <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">local</span> ran = <span class="keyword">false</span>
+    <span class="keyword">return</span> <span class="keyword">function</span>(...)
+        <span class="keyword">if</span> <span class="keyword">not</span> ran <span class="keyword">then</span>
+            ran = <span class="keyword">true</span>
+            fn(...)
+        <span class="keyword">end</span>
+        <span class="comment">-- TODO: Decide if we want to throw/log an error when `ran == true`
+</span>    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+
+<span class="comment">--- Turns an asynchronous function into a blocking operation.
+</span><span class="comment">--
+</span><span class="comment">-- Using coroutines, this runs a callback-style asynchronous function and blocks until it completes.
+</span><span class="comment">-- The function to be wrapped may only accept a single parameter: a callback function.
+</span><span class="comment">-- Return values passed to this callback will be returned as regular values by `wrap_sync`.
+</span><span class="comment">--
+</span><span class="comment">-- Panics that happened inside the asynchronous function will be captured and re-thrown.
+</span><span class="comment">--
+</span><span class="comment">-- @tparam function fn An asynchronous function: `function(cb)`
+</span><a id="56"></a><span class="comment">-- @treturn any Any return values as passed by the wrapped function
+</span><span class="keyword">function</span> async.wrap_sync(fn)
+    <span class="keyword">local</span> co = <span class="global">coroutine</span>.create(<span class="keyword">function</span>()
+        fn(<span class="keyword">function</span>(...)
+            <span class="global">coroutine</span>.yield(...)
+        <span class="keyword">end</span>)
+    <span class="keyword">end</span>)
+
+    <span class="keyword">local</span> ret = <span class="global">table</span>.pack(<span class="global">coroutine</span>.resume(co))
+    <span class="keyword">if</span> <span class="keyword">not</span> ret[<span class="number">1</span>] <span class="keyword">then</span>
+        <span class="global">error</span>(ret[<span class="number">2</span>])
+    <span class="keyword">else</span>
+        <span class="global">table</span>.remove(ret, <span class="number">1</span>)
+        <span class="keyword">return</span> <span class="global">table</span>.<span class="global">unpack</span>(ret)
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+
+<span class="comment">--- Executes a list of asynchronous functions in series.
+</span><span class="comment">--
+</span><span class="comment">-- `waterfall` accepts an arbitrary list of asynchronous functions (tasks) and calls them in series.
+</span><span class="comment">-- Each function waits for the previous one to finish and will be given the previous function's return values.
+</span><span class="comment">--
+</span><span class="comment">-- If an error occurs in any task, execution is stopped immediately, and the final callback is called
+</span><span class="comment">-- with the error value.
+</span><span class="comment">-- If all tasks complete successfully, the final callback will be called with the return values of the last
+</span><span class="comment">-- task in the list.
+</span><span class="comment">--
+</span><span class="comment">-- All tasks must adhere to the callback signature: `function(err, ...)`.
+</span><span class="comment">--
+</span><span class="comment">-- @tparam table tasks The asynchronous tasks to execute in series.
+</span><span class="comment">-- @tparam function final_callback Called when all tasks have finished.
+</span><span class="comment">-- @asynctreturn any err The error returned by a failing task.
+</span><a id="89"></a><span class="comment">-- @asynctreturn any ... Values as returned by the last task.
+</span><span class="keyword">function</span> async.waterfall(tasks, final_callback)
+    final_callback = async.once(final_callback)
+
+    <span class="comment">-- Bail early if there is nothing to do
+</span>    <span class="keyword">if</span> <span class="keyword">not</span> <span class="global">next</span>(tasks) <span class="keyword">then</span>
+        final_callback()
+        <span class="keyword">return</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">local</span> i = <span class="number">0</span>
+    <span class="keyword">local</span> _run
+    <span class="keyword">local</span> _continue
+
+    _run = <span class="keyword">function</span>(...)
+        i = i + <span class="number">1</span>
+        <span class="keyword">local</span> task = tasks[i]
+        <span class="keyword">if</span> task <span class="keyword">then</span>
+            task(_continue, ...)
+        <span class="keyword">else</span>
+            <span class="comment">-- We've reached the bottom of the waterfall, time to exit
+</span>            final_callback(<span class="keyword">nil</span>, ...)
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    _continue = <span class="keyword">function</span>(err, ...)
+        <span class="keyword">if</span> err <span class="keyword">then</span>
+            final_callback(err)
+            <span class="keyword">return</span>
+        <span class="keyword">end</span>
+
+        _run(...)
+    <span class="keyword">end</span>
+
+    _continue()
+<span class="keyword">end</span>
+
+
+<span class="comment">--- Runs all tasks in parallel and collects the results.
+</span><span class="comment">--
+</span><span class="comment">-- If any task produces an error, `final_callback` will be called immediately
+</span><span class="comment">-- and remaining tasks will not be tracked.
+</span><span class="comment">--
+</span><span class="comment">-- @tparam table tasks A list of asynchronous functions. They will be given a
+</span><span class="comment">--  callback parameter: `function(err, ...)`.
+</span><a id="134"></a><span class="comment">-- @tparam function final_callback
+</span><span class="keyword">function</span> async.all(tasks, final_callback)
+    final_callback = async.once(final_callback)
+
+    <span class="keyword">local</span> len = #tasks
+    <span class="keyword">if</span> len == <span class="number">0</span> <span class="keyword">then</span>
+        final_callback()
+        <span class="keyword">return</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">local</span> results = {}
+    <span class="keyword">local</span> done = <span class="number">0</span>
+    <span class="keyword">local</span> cancelled = <span class="keyword">false</span>
+
+    <span class="keyword">for</span> i, task <span class="keyword">in</span> <span class="global">ipairs</span>(tasks) <span class="keyword">do</span>
+        task(<span class="keyword">function</span>(err, ...)
+            <span class="keyword">if</span> cancelled <span class="keyword">then</span>
+                <span class="keyword">return</span>
+            <span class="keyword">end</span>
+
+            <span class="keyword">if</span> err <span class="keyword">then</span>
+                cancelled = <span class="keyword">true</span>
+                final_callback(err)
+                <span class="keyword">return</span>
+            <span class="keyword">end</span>
+
+            done = done + <span class="number">1</span>
+            results[i] = <span class="global">table</span>.pack(...)
+
+            <span class="keyword">if</span> done == len <span class="keyword">then</span>
+                final_callback(<span class="keyword">nil</span>, results)
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>)
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+
+<span class="comment">--- Resolves a DAG (Directed Acyclic Graph) of asynchronous dependencies.
+</span><span class="comment">--
+</span><span class="comment">-- The task list is a key-value map, where the key defines the task name and the value the is the task definition.
+</span><span class="comment">-- A task definition consists of a a list of dependencies (which may be empty) and an asynchronous
+</span><span class="comment">-- function.
+</span><span class="comment">-- Any task name may be used as dependency for any other task, as long as no loops are created.
+</span><span class="comment">-- A task's function will be called once all of its dependencies have become available and will be passed a `results`
+</span><span class="comment">-- table that contains the values returned by all tasks so far.
+</span><span class="comment">--
+</span><span class="comment">-- If any tasks passes an error to its callback, execution and tracking for all other tasks stops and `final_callback`
+</span><span class="comment">-- is called with that error value. Otherwise, `final_callback` will be called once all tasks have completed, with the
+</span><span class="comment">-- results of all tasks.
+</span><span class="comment">--
+</span><span class="comment">-- The `results` table uses the task name as key and provides a `table.pack`ed list of task results as value.
+</span><span class="comment">--
+</span><span class="comment">-- **Example:**
+</span><span class="comment">--     async.dag(
+</span><span class="comment">--         {
+</span><span class="comment">--             get_data = { function(cb)
+</span><span class="comment">--                 local f = fs.open("/tmp/foo.txt")
+</span><span class="comment">--                 f:read(cb)
+</span><span class="comment">--             end },
+</span><span class="comment">--             make_folder = { function(cb)
+</span><span class="comment">--                 fs.make_folder("/tmp/bar", cb)
+</span><span class="comment">--             end },
+</span><span class="comment">--             write_data = { "get_data", "make_folder", function(cb, results)
+</span><span class="comment">--                 local data = table.unpack(results.get_data)
+</span><span class="comment">--                 local f = fs.open("/tmp/bar/foo.txt")
+</span><span class="comment">--                 f:write(data)
+</span><span class="comment">--             end },
+</span><span class="comment">--         },
+</span><span class="comment">--         function(err, results)
+</span><span class="comment">--             if err ~= nil then
+</span><span class="comment">--                 error(err)
+</span><span class="comment">--             else
+</span><span class="comment">--                 print("success")
+</span><span class="comment">--             end
+</span><span class="comment">--         end
+</span><span class="comment">--     )
+</span><span class="comment">--
+</span><span class="comment">-- @tparam table tasks A map of asynchronous tasks.
+</span><span class="comment">-- @tparam function final_callback
+</span><span class="comment">-- @asynctreturn any err Any error from a failing task.
+</span><a id="214"></a><span class="comment">-- @asynctreturn table results Results of all resolved tasks.
+</span><span class="keyword">function</span> async.dag(tasks, final_callback)
+    final_callback = async.once(final_callback)
+
+    <span class="comment">-- Short-circuit if there is nothing to do.
+</span>    <span class="comment">-- To provide consistent API, pass a `results` table
+</span>    <span class="keyword">if</span> <span class="keyword">not</span> <span class="global">next</span>(tasks) <span class="keyword">then</span>
+        final_callback(<span class="keyword">nil</span>, {})
+        <span class="keyword">return</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">local</span> results = {}
+    <span class="keyword">local</span> queue = {}
+    <span class="keyword">local</span> queue_len = <span class="number">0</span>
+    <span class="keyword">local</span> running = <span class="number">0</span>
+    <span class="keyword">local</span> pending = {}
+    <span class="keyword">local</span> cancelled = <span class="keyword">false</span>
+
+    <span class="keyword">local</span> _run_queue
+
+    <span class="keyword">local</span> <span class="keyword">function</span> _enqueue(name, fn)
+        <span class="keyword">if</span> queue[name] <span class="keyword">then</span>
+            <span class="global">error</span>(<span class="global">string</span>.format(<span class="string">"task with name '%s' already in queue"</span>, name))
+            <span class="keyword">return</span>
+        <span class="keyword">end</span>
+
+        queue[name] = fn
+        queue_len = queue_len + <span class="number">1</span>
+        <span class="comment">-- When queued for execution, it is no longer waiting for dependencies
+</span>        pending[name] = <span class="keyword">nil</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">local</span> <span class="keyword">function</span> _initialize(name, task)
+        <span class="comment">-- Short-circuit for tasks without dependencies
+</span>        <span class="keyword">if</span> <span class="global">type</span>(task) == <span class="string">"function"</span> <span class="keyword">then</span>
+            _enqueue(name, task)
+            <span class="keyword">return</span>
+        <span class="keyword">elseif</span> #task == <span class="number">1</span> <span class="keyword">then</span>
+            _enqueue(name, task[<span class="number">1</span>])
+            <span class="keyword">return</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">local</span> dependencies = table_extra.slice(task, <span class="number">1</span>, -<span class="number">1</span>)
+        <span class="keyword">local</span> ready = table_extra.all(dependencies, <span class="keyword">function</span>(name)
+            <span class="keyword">return</span> results[name] ~= <span class="keyword">nil</span>
+        <span class="keyword">end</span>)
+
+        <span class="keyword">if</span> ready <span class="keyword">then</span>
+            _enqueue(name, task[#task])
+        <span class="keyword">else</span>
+            pending[name] = task
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    <span class="keyword">local</span> <span class="keyword">function</span> _check_pending(tasks)
+        <span class="keyword">for</span> name, task <span class="keyword">in</span> <span class="global">pairs</span>(tasks) <span class="keyword">do</span>
+            _initialize(name, task)
+        <span class="keyword">end</span>
+
+        <span class="comment">-- When there are tasks waiting for dependencies, but none in the queue
+</span>        <span class="comment">-- and none actively running, we must have reached a deadlock
+</span>        <span class="keyword">if</span> queue_len == <span class="number">0</span> <span class="keyword">and</span> running == <span class="number">0</span> <span class="keyword">and</span> <span class="global">next</span>(pending) <span class="keyword">then</span>
+            <span class="keyword">local</span> err = <span class="string">"deadlock detected. the following tasks are waiting for dependencies: "</span>
+            <span class="keyword">for</span> name <span class="keyword">in</span> <span class="global">pairs</span>(pending) <span class="keyword">do</span>
+                err = err .. <span class="global">string</span>.format(<span class="string">" %s"</span>, name)
+            <span class="keyword">end</span>
+            <span class="global">error</span>(err)
+            <span class="keyword">return</span>
+        <span class="keyword">end</span>
+
+        _run_queue()
+    <span class="keyword">end</span>
+
+    _run_queue = <span class="keyword">function</span>()
+        <span class="keyword">for</span> name, fn <span class="keyword">in</span> <span class="global">pairs</span>(queue) <span class="keyword">do</span>
+            queue[name] = <span class="keyword">nil</span>
+            queue_len = queue_len - <span class="number">1</span>
+            running = running + <span class="number">1</span>
+
+            fn(<span class="keyword">function</span>(err, ...)
+                <span class="keyword">if</span> cancelled <span class="keyword">then</span>
+                    <span class="comment">-- Another, concurrent task already finished with an error
+</span>                    <span class="keyword">return</span>
+                <span class="keyword">elseif</span> err <span class="keyword">then</span>
+                    cancelled = <span class="keyword">true</span>
+                    final_callback(err, results)
+                    <span class="keyword">return</span>
+                <span class="keyword">end</span>
+
+                results[name] = <span class="global">table</span>.pack(...)
+                running = running - <span class="number">1</span>
+
+                <span class="comment">-- If all lists are empty, we must have run all tasks
+</span>                <span class="keyword">if</span> queue_len == <span class="number">0</span> <span class="keyword">and</span> running == <span class="number">0</span> <span class="keyword">and</span> <span class="keyword">not</span> <span class="global">next</span>(pending) <span class="keyword">then</span>
+                    final_callback(<span class="keyword">nil</span>, results)
+                <span class="keyword">else</span>
+                    _check_pending(pending)
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>, results)
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+
+    _check_pending(tasks)
+<span class="keyword">end</span>
+
+
+<span class="comment">--- Repeatedly calls `test` and `iteratee` until stopped.
+</span><span class="comment">--
+</span><span class="comment">-- `iteratee` is called repeatedly. It is passed a callback
+</span><span class="comment">-- (`function(err, ...)`), which should be called with either an error or any
+</span><span class="comment">-- results of the iteration.
+</span><span class="comment">--
+</span><span class="comment">-- `test` is called once per iteration, after `iteratee`. It is passed a
+</span><span class="comment">-- callback (`function(err, stop)`) and any non-error values from `iteratee`.
+</span><span class="comment">-- The callback should be called with either an error or a boolean value.
+</span><span class="comment">-- Iteration will stop when an error is passed by either callback or when
+</span><span class="comment">-- `test` passes a falsy value.
+</span><span class="comment">--
+</span><span class="comment">-- In either case `final_callback` will be called with the latest results from
+</span><span class="comment">-- `iteratee`.
+</span><span class="comment">--
+</span><span class="comment">-- This is, in concept, analogous to a `do {} while ()` construct, where `iteratee`
+</span><span class="comment">-- is the `do` block and `test` is the `while` test.
+</span><span class="comment">--
+</span><span class="comment">-- @tparam function iteratee Called repeatedly. Signature: `function(cb)`.
+</span><span class="comment">-- @tparam function test Called once per iteration, after `iteratee`.
+</span><span class="comment">--  Signature: `function(cb, ...)`.
+</span><span class="comment">-- @tparam function final_callback Called once, when `test` indicates to stop
+</span><span class="comment">--  the iteration.
+</span><span class="comment">-- @asynctreturn any err Any error from `iteratee` or `test`.
+</span><a id="344"></a><span class="comment">-- @asynctreturn any ... Values passed by the most recent execution of `iteratee`.
+</span><span class="keyword">function</span> async.do_while(iteratee, test, final_callback)
+    final_callback = async.once(final_callback)
+    <span class="keyword">local</span> results = {}
+    <span class="keyword">local</span> _next
+
+    <span class="comment">-- Wraps `test` to break on errors and capture results
+</span>    <span class="keyword">local</span> <span class="keyword">function</span> _test(err, ...)
+        <span class="keyword">if</span> err <span class="keyword">then</span>
+            <span class="keyword">return</span> final_callback(err)
+        <span class="keyword">end</span>
+
+        results = <span class="global">table</span>.pack(...)
+        test(_next, ...)
+    <span class="keyword">end</span>
+
+    <span class="comment">-- Calls `iteratee` for the next iteration, unless stopped
+</span>    _next = <span class="keyword">function</span>(err, continue)
+        <span class="keyword">if</span> err <span class="keyword">then</span>
+            <span class="keyword">return</span> final_callback(err)
+        <span class="keyword">end</span>
+
+        <span class="keyword">if</span> <span class="keyword">not</span> continue <span class="keyword">then</span>
+            final_callback(<span class="keyword">nil</span>, <span class="global">table</span>.<span class="global">unpack</span>(results))
+        <span class="keyword">end</span>
+
+        iteratee(_test)
+    <span class="keyword">end</span>
+
+    _next(<span class="keyword">nil</span>, <span class="keyword">true</span>)
+<span class="keyword">end</span>
+
+
+<span class="comment">--- Wrap a function with arguments for use as callback.
+</span><span class="comment">--
+</span><span class="comment">-- This is mainly used to provide a (partial) list of arguments to a callback function.
+</span><span class="comment">-- Arguments to this call are passed through to the provided function when it is called.
+</span><span class="comment">-- Arguments from the caller are appended after those.
+</span><span class="comment">--
+</span><span class="comment">-- @todo Optimize the common use cases of only having a few outer arguments
+</span><span class="comment">-- by hardcoding those cases.
+</span><span class="comment">--
+</span><span class="comment">-- @tparam function fn The function to wrap.
+</span><span class="comment">-- @tparam any ... Arbitrary arguments to pass through to the wrapped function.
+</span><a id="388"></a><span class="comment">-- @treturn function
+</span><span class="keyword">function</span> async.callback(fn, ...)
+    <span class="keyword">local</span> outer = <span class="global">table</span>.pack(...)
+
+    <span class="keyword">return</span> <span class="keyword">function</span>(cb, ...)
+        <span class="keyword">local</span> inner = <span class="global">table</span>.pack(...)
+        <span class="comment">-- Merge, then unpack both argument tables to provide a single var arg.
+</span>        <span class="comment">-- But keep the returned callback first, for consistency across APIs.
+</span>        <span class="keyword">local</span> args = { cb }
+        table_extra.append(args, outer)
+        table_extra.append(args, inner)
+        <span class="keyword">return</span> fn(<span class="global">table</span>.<span class="global">unpack</span>(args))
+    <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="keyword">return</span> async</pre>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2022-03-01 14:30:19 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
