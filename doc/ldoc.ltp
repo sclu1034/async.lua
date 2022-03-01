@@ -187,7 +187,7 @@
     <h3>$(custom.title or custom[1]):</h3>
     <ul>
 #      for value in iter(tag) do
-         $(li)$(custom.format and custom.format(value) or M(value))$(il)
+         $(li)$(custom.format and custom:format(value, item, M) or M(value))$(il)
 #      end -- for
 #     end -- if tag
     </ul>
