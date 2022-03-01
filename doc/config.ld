@@ -1,4 +1,5 @@
 project = 'async.lua'
+title = 'async.lua'
 description = 'Utilities for callback-style asynchronous Lua'
 
 template = true
