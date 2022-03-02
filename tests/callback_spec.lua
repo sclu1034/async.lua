@@ -13,7 +13,7 @@ describe('async.callback', function()
     end)
 
     it('calls the wrapped function', function()
-        local cb = async.callback(s)
+        local cb = async.callback(nil, s)
         assert.spy(s).was_not_called()
 
         cb(noop)
@@ -27,7 +27,7 @@ describe('async.callback', function()
     it('passes arguments from the definition', function()
         local val_1 = "val_1"
         local val_2 = "val_2"
-        local cb = async.callback(s, val_1, val_2)
+        local cb = async.callback(nil, s, val_1, val_2)
 
         cb(noop)
         assert.spy(s).was_called_with(match.is_function(), match.is_same(val_1), match.is_same(val_2))
@@ -36,7 +36,7 @@ describe('async.callback', function()
     it('passes arguments from the call', function()
         local val_1 = "val_1"
         local val_2 = "val_2"
-        local cb = async.callback(s)
+        local cb = async.callback(nil, s)
 
         cb(noop, val_1)
         assert.spy(s).was_called_with(match.is_function(), match.is_same(val_1))
@@ -48,7 +48,7 @@ describe('async.callback', function()
     it('passes all arguments in order', function()
         local val_1 = "val_1"
         local val_2 = "val_2"
-        local cb = async.callback(s, val_1)
+        local cb = async.callback(nil, s, val_1)
 
         cb(noop, val_2)
         assert.spy(s).was_called_with(match.is_function(), match.is_same(val_1), match.is_same(val_2))

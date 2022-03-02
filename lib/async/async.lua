@@ -374,7 +374,8 @@ function async.callback(object, fn, ...)
         local inner = table.pack(...)
         -- Merge, then unpack both argument tables to provide a single var arg.
         -- But keep the returned callback first, for consistency across APIs.
-        local args = { object, cb }
+        local args = { object }
+        table.insert(args, cb)
         table_extra.append(args, outer)
         table_extra.append(args, inner)
         return fn(table.unpack(args))
