@@ -5,7 +5,7 @@ local match = require("luassert.match")
 local async = require("async")
 
 describe('async.callback', function()
-    local callback = function() end
+    local noop = function() end
     local s
 
     before_each(function()
@@ -16,11 +16,11 @@ describe('async.callback', function()
         local cb = async.callback(s)
         assert.spy(s).was_not_called()
 
-        cb(callback)
+        cb(noop)
         assert.spy(s).was_called(1)
         assert.spy(s).was_called_with(match.is_function())
 
-        cb(callback)
+        cb(noop)
         assert.spy(s).was_called(2)
     end)
 
@@ -29,7 +29,7 @@ describe('async.callback', function()
         local val_2 = "val_2"
         local cb = async.callback(s, val_1, val_2)
 
-        cb(callback)
+        cb(noop)
         assert.spy(s).was_called_with(match.is_function(), match.is_same(val_1), match.is_same(val_2))
     end)
 
@@ -38,10 +38,10 @@ describe('async.callback', function()
         local val_2 = "val_2"
         local cb = async.callback(s)
 
-        cb(callback, val_1)
+        cb(noop, val_1)
         assert.spy(s).was_called_with(match.is_function(), match.is_same(val_1))
 
-        cb(callback, val_1, val_2)
+        cb(noop, val_1, val_2)
         assert.spy(s).was_called_with(match.is_function(), match.is_same(val_1), match.is_same(val_2))
     end)
 
@@ -50,7 +50,7 @@ describe('async.callback', function()
         local val_2 = "val_2"
         local cb = async.callback(s, val_1)
 
-        cb(callback, val_2)
+        cb(noop, val_2)
         assert.spy(s).was_called_with(match.is_function(), match.is_same(val_1), match.is_same(val_2))
     end)
 end)
