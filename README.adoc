@@ -1,4 +1,26 @@
 = async.lua
-:toc:
+:idprefix:
+:idseparator: -
+ifdef::env-github,env-browser[]
+:toc: macro
+:toclevels: 1
+endif::[]
+ifdef::env-github[]
+:branch: master
+:status:
+:outfilesuffix: .adoc
+:!toc-title:
+:caution-caption: :fire:
+:important-caption: :exclamation:
+:note-caption: :paperclip:
+:tip-caption: :bulb:
+:warning-caption: :warning:
+endif::[]
+:url-ci-github: https://github.com/sclu1034/async.lua/actions
+:url-ci-badge-github: https://github.com/sclu1034/async.lua/actions/workflows/ci.yml/badge.svg
+
+ifdef::status[]
+image:{url-ci-badge-github}[Build Status (GitHub Actions), link={url-ci-github}]
+endif::[]
 
 Utilities for callback-style asynchronous Lua.
