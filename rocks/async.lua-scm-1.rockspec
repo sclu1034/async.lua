@@ -14,8 +14,8 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        async = "lib/async.lua",
-        ["async.internal.table"] = "lib/internal/table.lua"
+        async = "lib/async/async.lua",
+        ["async.internal.table"] = "lib/async/internal/table.lua"
     },
     copy_directories = {
         "doc", "examples", "tests"

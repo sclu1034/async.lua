@@ -1,7 +1,7 @@
 package = "async.lua"
 version = "0.1.0-1"
 source = {
-    url = "git://github.com/sclu1034/async.lua"
+    url = "git://github.com/sclu1034/async.lua",
     tag = "v0.1.0"
 }
 description = {
@@ -15,8 +15,8 @@ dependencies = {
 build = {
     type = "builtin",
     modules = {
-        async = "lib/async.lua",
-        ["async.internal.table"] = "lib/internal/table.lua"
+        async = "lib/async/async.lua",
+        ["async.internal.table"] = "lib/async/internal/table.lua"
     },
     copy_directories = {
         "doc", "examples", "tests"
