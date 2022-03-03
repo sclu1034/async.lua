@@ -61,7 +61,7 @@
 </span><span class="comment">-- @license GPLv3-or-later
 </span><span class="comment">---------------------------------------------------------------------------
 </span>
-<span class="keyword">local</span> table_extra = <span class="global">require</span>(<span class="string">"async.internal.table"</span>)
+<span class="keyword">local</span> util = <span class="global">require</span>(<span class="string">"async.internal.util"</span>)
 
 <span class="keyword">local</span> async = {}
 
@@ -150,7 +150,9 @@
         i = i + <span class="number">1</span>
         <span class="keyword">local</span> task = tasks[i]
         <span class="keyword">if</span> task <span class="keyword">then</span>
-            task(_continue, ...)
+            <span class="keyword">local</span> args = <span class="global">table</span>.pack(...)
+            <span class="global">table</span>.insert(args, _continue)
+            task(<span class="global">table</span>.<span class="global">unpack</span>(args))
         <span class="keyword">else</span>
             <span class="comment">-- We've reached the bottom of the waterfall, time to exit
 </span>            final_callback(<span class="keyword">nil</span>, ...)
@@ -177,7 +179,7 @@
 </span><span class="comment">--
 </span><span class="comment">-- @tparam table tasks A list of asynchronous functions. They will be given a
 </span><span class="comment">--  callback parameter: `function(err, ...)`.
-</span><a id="134"></a><span class="comment">-- @tparam function final_callback
+</span><a id="136"></a><span class="comment">-- @tparam function final_callback
 </span><span class="keyword">function</span> async.all(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -239,10 +241,10 @@
 </span><span class="comment">--             make_folder = { function(cb)
 </span><span class="comment">--                 fs.make_folder("/tmp/bar", cb)
 </span><span class="comment">--             end },
-</span><span class="comment">--             write_data = { "get_data", "make_folder", function(cb, results)
+</span><span class="comment">--             write_data = { "get_data", "make_folder", function(results, cb)
 </span><span class="comment">--                 local data = table.unpack(results.get_data)
 </span><span class="comment">--                 local f = fs.open("/tmp/bar/foo.txt")
-</span><span class="comment">--                 f:write(data)
+</span><span class="comment">--                 f:write(data, cb)
 </span><span class="comment">--             end },
 </span><span class="comment">--         },
 </span><span class="comment">--         function(err, results)
@@ -257,7 +259,7 @@
 </span><span class="comment">-- @tparam table tasks A map of asynchronous tasks.
 </span><span class="comment">-- @tparam function final_callback
 </span><span class="comment">-- @asynctreturn any err Any error from a failing task.
-</span><a id="214"></a><span class="comment">-- @asynctreturn table results Results of all resolved tasks.
+</span><a id="216"></a><span class="comment">-- @asynctreturn table results Results of all resolved tasks.
 </span><span class="keyword">function</span> async.dag(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -299,8 +301,8 @@
             <span class="keyword">return</span>
         <span class="keyword">end</span>
 
-        <span class="keyword">local</span> dependencies = table_extra.slice(task, <span class="number">1</span>, -<span class="number">1</span>)
-        <span class="keyword">local</span> ready = table_extra.all(dependencies, <span class="keyword">function</span>(name)
+        <span class="keyword">local</span> dependencies = util.slice(task, <span class="number">1</span>, -<span class="number">1</span>)
+        <span class="keyword">local</span> ready = util.all(dependencies, <span class="keyword">function</span>(name)
             <span class="keyword">return</span> results[name] ~= <span class="keyword">nil</span>
         <span class="keyword">end</span>)
 
@@ -336,7 +338,7 @@
             queue_len = queue_len - <span class="number">1</span>
             running = running + <span class="number">1</span>
 
-            fn(<span class="keyword">function</span>(err, ...)
+            fn(results, <span class="keyword">function</span>(err, ...)
                 <span class="keyword">if</span> cancelled <span class="keyword">then</span>
                     <span class="comment">-- Another, concurrent task already finished with an error
 </span>                    <span class="keyword">return</span>
@@ -355,7 +357,7 @@
                 <span class="keyword">else</span>
                     _check_pending(pending)
                 <span class="keyword">end</span>
-            <span class="keyword">end</span>, results)
+            <span class="keyword">end</span>)
         <span class="keyword">end</span>
     <span class="keyword">end</span>
 
@@ -383,11 +385,11 @@
 </span><span class="comment">--
 </span><span class="comment">-- @tparam function iteratee Called repeatedly. Signature: `function(cb)`.
 </span><span class="comment">-- @tparam function test Called once per iteration, after `iteratee`.
-</span><span class="comment">--  Signature: `function(cb, ...)`.
+</span><span class="comment">--  Signature: `function(..., cb)`.
 </span><span class="comment">-- @tparam function final_callback Called once, when `test` indicates to stop
 </span><span class="comment">--  the iteration.
 </span><span class="comment">-- @asynctreturn any err Any error from `iteratee` or `test`.
-</span><a id="344"></a><span class="comment">-- @asynctreturn any ... Values passed by the most recent execution of `iteratee`.
+</span><a id="346"></a><span class="comment">-- @asynctreturn any ... Values passed by the most recent execution of `iteratee`.
 </span><span class="keyword">function</span> async.do_while(iteratee, test, final_callback)
     final_callback = async.once(final_callback)
     <span class="keyword">local</span> results = {}
@@ -400,7 +402,9 @@
         <span class="keyword">end</span>
 
         results = <span class="global">table</span>.pack(...)
-        test(_next, ...)
+        <span class="keyword">local</span> args = <span class="global">table</span>.pack(...)
+        <span class="global">table</span>.insert(args, _next)
+        test(<span class="global">table</span>.<span class="global">unpack</span>(args))
     <span class="keyword">end</span>
 
     <span class="comment">-- Calls `iteratee` for the next iteration, unless stopped
@@ -436,18 +440,16 @@
 </span><span class="comment">-- @tparam[opt] table object The object to call the method on.
 </span><span class="comment">-- @tparam function fn The function to wrap.
 </span><span class="comment">-- @tparam any ... Arbitrary arguments to pass through to the wrapped function.
-</span><a id="393"></a><span class="comment">-- @treturn function
+</span><a id="397"></a><span class="comment">-- @treturn function
 </span><span class="keyword">function</span> async.callback(object, fn, ...)
     <span class="keyword">local</span> outer = <span class="global">table</span>.pack(...)
 
-    <span class="keyword">return</span> <span class="keyword">function</span>(cb, ...)
+    <span class="keyword">return</span> <span class="keyword">function</span>(...)
         <span class="keyword">local</span> inner = <span class="global">table</span>.pack(...)
-        <span class="comment">-- Merge, then unpack both argument tables to provide a single var arg.
-</span>        <span class="comment">-- But keep the returned callback first, for consistency across APIs.
+        <span class="comment">-- Merge, then unpack both argument lists to provide a single var arg.
 </span>        <span class="keyword">local</span> args = { object }
-        <span class="global">table</span>.insert(args, cb)
-        table_extra.append(args, outer)
-        table_extra.append(args, inner)
+        util.append(args, outer)
+        util.append(args, inner)
         <span class="keyword">return</span> fn(<span class="global">table</span>.<span class="global">unpack</span>(args))
     <span class="keyword">end</span>
 <span class="keyword">end</span>
@@ -459,7 +461,7 @@
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-03-02 09:36:07 </i>
+<i style="float:right;">Last updated 2022-03-03 08:02:43 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
