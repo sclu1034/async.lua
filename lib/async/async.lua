@@ -14,7 +14,7 @@
 -- @license GPLv3-or-later
 ---------------------------------------------------------------------------
 
-local table_extra = require("async.internal.table")
+local util = require("async.internal.util")
 
 local async = {}
 
@@ -231,8 +231,8 @@ function async.dag(tasks, final_callback)
             return
         end
 
-        local dependencies = table_extra.slice(task, 1, -1)
-        local ready = table_extra.all(dependencies, function(name)
+        local dependencies = util.slice(task, 1, -1)
+        local ready = util.all(dependencies, function(name)
             return results[name] ~= nil
         end)
 
@@ -378,8 +378,8 @@ function async.callback(object, fn, ...)
         local inner = table.pack(...)
         -- Merge, then unpack both argument lists to provide a single var arg.
         local args = { object }
-        table_extra.append(args, outer)
-        table_extra.append(args, inner)
+        util.append(args, outer)
+        util.append(args, inner)
         return fn(table.unpack(args))
     end
 end
