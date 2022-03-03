@@ -28,7 +28,7 @@ describe('async.waterfall', function()
         local val = "value"
 
         local task_1 = spy(function(cb) cb(nil, val) end)
-        local task_2 = spy(function(cb, arg)
+        local task_2 = spy(function(arg, cb)
             assert.is_same(val, arg)
             cb()
         end)
@@ -40,13 +40,13 @@ describe('async.waterfall', function()
             }, cb)
         end)
         assert.spy(task_1).was_called()
-        assert.spy(task_2).was_called_with(match.is_function(), match.is_same(val))
+        assert.spy(task_2).was_called_with(match.is_same(val), match.is_function())
     end)
 
     it('skips to final callback on error', function()
         local val = "error"
         local task_1 = spy(function(cb) cb(val) end)
-        local task_2 = spy(function(cb) cb() end)
+        local task_2 = spy(function(_, cb) cb() end)
 
         local err = async.wrap_sync(function(cb)
             async.waterfall({

@@ -103,7 +103,9 @@ function async.waterfall(tasks, final_callback)
         i = i + 1
         local task = tasks[i]
         if task then
-            task(_continue, ...)
+            local args = table.pack(...)
+            table.insert(args, _continue)
+            task(table.unpack(args))
         else
             -- We've reached the bottom of the waterfall, time to exit
             final_callback(nil, ...)
@@ -266,7 +268,7 @@ function async.dag(tasks, final_callback)
             queue_len = queue_len - 1
             running = running + 1
 
-            fn(function(err, ...)
+            fn(results, function(err, ...)
                 if cancelled then
                     -- Another, concurrent task already finished with an error
                     return
@@ -285,7 +287,7 @@ function async.dag(tasks, final_callback)
                 else
                     _check_pending(pending)
                 end
-            end, results)
+            end)
         end
     end
 
@@ -313,7 +315,7 @@ end
 --
 -- @tparam function iteratee Called repeatedly. Signature: `function(cb)`.
 -- @tparam function test Called once per iteration, after `iteratee`.
---  Signature: `function(cb, ...)`.
+--  Signature: `function(..., cb)`.
 -- @tparam function final_callback Called once, when `test` indicates to stop
 --  the iteration.
 -- @asynctreturn any err Any error from `iteratee` or `test`.
@@ -330,7 +332,9 @@ function async.do_while(iteratee, test, final_callback)
         end
 
         results = table.pack(...)
-        test(_next, ...)
+        local args = table.pack(...)
+        table.insert(args, _next)
+        test(table.unpack(args))
     end
 
     -- Calls `iteratee` for the next iteration, unless stopped
@@ -370,12 +374,10 @@ end
 function async.callback(object, fn, ...)
     local outer = table.pack(...)
 
-    return function(cb, ...)
+    return function(...)
         local inner = table.pack(...)
-        -- Merge, then unpack both argument tables to provide a single var arg.
-        -- But keep the returned callback first, for consistency across APIs.
+        -- Merge, then unpack both argument lists to provide a single var arg.
         local args = { object }
-        table.insert(args, cb)
         table_extra.append(args, outer)
         table_extra.append(args, inner)
         return fn(table.unpack(args))

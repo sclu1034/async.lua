@@ -26,16 +26,33 @@ describe('async.do_while', function()
         assert.spy(s_test).was_called_with(match.is_function())
     end)
 
-    it('passes the last result of iteratee', function()
+    it('passes iteratee result to test function', function()
         local val = "value"
-        local s_final = spy(function() end)
         local s_iteratee = spy(function(cb) cb(nil, val) end)
-        local s_test = spy(function(cb) cb(nil, false) end)
+        local s_test = spy(function(_, cb) cb(nil, false) end)
 
         async.wrap_sync(function(cb)
             async.do_while(
                 s_iteratee,
                 s_test,
+                function(...)
+                    cb(...)
+                end
+            )
+        end)
+
+        assert.spy(s_test).was_called_with(match.is_same(val), match.is_function())
+    end)
+
+    it('passes the last result of iteratee', function()
+        local val = "value"
+        local s_final = spy(function() end)
+        local s_iteratee = spy(function(cb) cb(nil, val) end)
+
+        async.wrap_sync(function(cb)
+            async.do_while(
+                s_iteratee,
+                function(_, cb) cb(nil, false) end,
                 function(...)
                     s_final(...)
                     cb(...)
@@ -43,7 +60,6 @@ describe('async.do_while', function()
             )
         end)
 
-        assert.spy(s_test).was_called_with(match.is_function(), match.is_same(val))
         assert.spy(s_final).was_called_with(match.is_nil(), match.is_same(val))
     end)
 
@@ -101,7 +117,7 @@ describe('async.do_while', function()
             count = count + 1
             cb(nil, count)
         end)
-        local s_test = spy(function(cb)
+        local s_test = spy(function(count, cb)
             cb(nil, count < max)
         end)
 

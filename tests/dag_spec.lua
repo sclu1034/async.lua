@@ -17,7 +17,7 @@ describe('async.dag', function()
     end)
 
     it('runs a task', function()
-        local task = spy(function(cb) cb() end)
+        local task = spy(function(_, cb) cb() end)
         async.wrap_sync(function(cb)
             async.dag({ task = {task} }, cb)
         end)
@@ -25,8 +25,8 @@ describe('async.dag', function()
     end)
 
     it('runs concurrent tasks', function()
-        local task_1 = spy(function(cb) cb() end)
-        local task_2 = spy(function(cb) cb() end)
+        local task_1 = spy(function(_, cb) cb() end)
+        local task_2 = spy(function(_, cb) cb() end)
 
         async.wrap_sync(function(cb)
             async.dag({
@@ -41,12 +41,12 @@ describe('async.dag', function()
 
     it('resolves linear dependencies', function()
         local val = "value"
-        local task_1 = spy(function(cb) cb(nil, val) end)
-        local task_2 = spy(function(cb)
+        local task_1 = spy(function(_, cb) cb(nil, val) end)
+        local task_2 = spy(function(_, cb)
             assert.spy(task_1).was_called()
             cb()
         end)
-        local task_3 = spy(function(cb)
+        local task_3 = spy(function(_, cb)
             assert.spy(task_2).was_called()
             cb()
         end)
@@ -59,15 +59,15 @@ describe('async.dag', function()
             }, cb)
         end)
 
-        assert.spy(task_1).was_called_with(match.is_function(), match.is_table())
-        assert.spy(task_2).was_called_with(match.is_function(), match.dag_result("task_1", match.is_equal(val)))
-        assert.spy(task_3).was_called_with(match.is_function(), match.is_table())
+        assert.spy(task_1).was_called_with(match.is_table(), match.is_function())
+        assert.spy(task_2).was_called_with(match.dag_result("task_1", match.is_equal(val)), match.is_function())
+        assert.spy(task_3).was_called_with(match.is_table(), match.is_function())
     end)
 
     it('skips to final callback on error', function()
         local val = "error"
-        local task_1 = spy(function(cb) cb(val) end)
-        local task_2 = spy(function(cb) cb() end)
+        local task_1 = spy(function(_, cb) cb(val) end)
+        local task_2 = spy(function(_, cb) cb() end)
 
         local err = async.wrap_sync(function(cb)
             async.dag({
