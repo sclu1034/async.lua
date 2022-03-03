@@ -80,4 +80,6 @@ describe('async.dag', function()
         assert.spy(task_2).was_not_called()
         assert.is_same(val, err)
     end)
+
+    -- TODO: Figure out a way to test the race condition in `_run_queue`
 end)

@@ -263,8 +263,13 @@ function async.dag(tasks, final_callback)
     end
 
     _run_queue = function()
-        for name, fn in pairs(queue) do
-            queue[name] = nil
+        -- `pairs` is not thread safe, so to avoid a race condition when this is used
+        -- with multi-threaded concurrency, the queue has to be copied.
+        local tasks = queue
+        queue = {}
+
+        for name, fn in pairs(tasks) do
+            tasks[name] = nil
             queue_len = queue_len - 1
             running = running + 1
 
