@@ -26,10 +26,17 @@ describe('async.waterfall', function()
 
     it('passes values between tasks', function()
         local val = "value"
+        local val_1 = "val_1"
+        local val_2 = "val_2"
 
         local task_1 = spy(function(cb) cb(nil, val) end)
         local task_2 = spy(function(arg, cb)
             assert.is_same(val, arg)
+            cb(nil, val_1, val_2)
+        end)
+        local task_3 = spy(function(arg_1, arg_2, cb)
+            assert.is_same(val_1, arg_1)
+            assert.is_same(val_2, arg_2)
             cb()
         end)
 
@@ -37,10 +44,12 @@ describe('async.waterfall', function()
             async.waterfall({
                 task_1,
                 task_2,
+                task_3,
             }, cb)
         end)
         assert.spy(task_1).was_called()
         assert.spy(task_2).was_called_with(match.is_same(val), match.is_function())
+        assert.spy(task_3).was_called_with(match.is_equal(val_1), match.is_same(val_2), match.is_function())
     end)
 
     it('skips to final callback on error', function()
