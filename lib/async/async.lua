@@ -330,7 +330,8 @@ function async.do_while(iteratee, test, final_callback)
     local results = {}
     local _next
 
-    -- Wraps `test` to break on errors and capture results
+    -- Wraps `test` to break on errors and capture results, where `results` are what
+    -- the `iteratee` passed to its callback.
     local function _test(err, ...)
         if err then
             return final_callback(err)
@@ -349,13 +350,13 @@ function async.do_while(iteratee, test, final_callback)
         end
 
         if not continue then
-            final_callback(nil, table.unpack(results))
+            return final_callback(nil, table.unpack(results))
         end
 
         iteratee(_test)
     end
 
-    _next(nil, true)
+    iteratee(_test)
 end
 
 
