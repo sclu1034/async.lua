@@ -2,9 +2,9 @@ outdir := "out"
 lua_exe := "lua"
 
 doc:
-    @mkdir -p "{{outdir}}/doc" "{{outdir}}/lib"
+    @mkdir -p "{{outdir}}/doc" "{{outdir}}/src"
     @sh tools/process_docs.sh "{{outdir}}"
-    ldoc --config=doc/config.ld --dir "{{outdir}}/doc" --project async.lua "{{outdir}}/lib"
+    ldoc --config=doc/config.ld --dir "{{outdir}}/doc" --project async.lua "{{outdir}}/src"
 
 test *ARGS:
     busted --config-file=.busted.lua --helper=tests/_helper.lua {{ARGS}} tests
