@@ -10,10 +10,10 @@ test *ARGS:
     busted --config-file=.busted.lua --helper=tests/_helper.lua {{ARGS}} tests
 
 check *ARGS:
-    find lib/ -iname '*.lua' | xargs luacheck {{ARGS}}
+    find src/ -iname '*.lua' | xargs luacheck {{ARGS}}
 
 @ci:
-    find lib/ -iname '*.lua' | xargs luacheck --formatter TAP
+    find src/ -iname '*.lua' | xargs luacheck --formatter TAP
     busted --config-file=.busted.lua --helper=tests/_helper.lua --output=TAP tests
 
 make version="scm-1":
