@@ -1,9 +1,8 @@
 outdir := "out"
-lua_exe := "lua"
 
 doc:
     @mkdir -p "{{outdir}}/doc" "{{outdir}}/src"
-    @sh tools/process_docs.sh "{{outdir}}"
+    sh tools/process_docs.sh "{{outdir}}"
     ldoc --config=doc/config.ld --dir "{{outdir}}/doc" --project async.lua "{{outdir}}/src"
 
 test *ARGS:
