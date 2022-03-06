@@ -1,49 +1,35 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>async.lua</title>
     <link rel="stylesheet" href="../ldoc.css" type="text/css" />
 </head>
 <body>
 
-<div id="container">
 
-<div id="product">
-	<div id="product_logo"></div>
-	<div id="product_name"><big><b></b></big></div>
-	<div id="product_description"></div>
-</div> <!-- id="product" -->
-
-
-<div id="main">
-
-
-<!-- Menu -->
-
-<div id="navigation">
-<br/>
-<h1>async.lua</h1>
-
-
-
-
-
-<h2>Source</h2>
-<ul class="nowrap">
-  <li><strong>async.lua</strong></li>
-</ul>
-<h2>Modules</h2>
-<ul class="nowrap">
-  <li><a href="../index.html">async</a></li>
-</ul>
-
-</div>
-
-<div id="content">
-
-    <h2>async.lua</h2>
+<aside id="sidebar" class="has-background-white-ter">
+    <h1 class="title">async.lua</h1>
+    <nav class="menu">
+        <p class="menu-label">Source</p>
+        <ul class="menu-list">
+            <li>
+                <a class="is-active">async.lua</a>
+                <ul>
+                </ul>
+            </li>
+        </ul>
+        <p class="menu-label">Modules</p>
+        <ul class="menu-list">
+            <li><a href="../index.html">async</a></li>
+        </ul>
+    </nav>
+</aside>
+<div id="content" class="content__wrapper">
+    <section class="section section__raw-content">
+        <div class="container content"><h2>async.lua</h2>
 <pre>
 <span class="comment">---------------------------------------------------------------------------
 </span><span class="comment">--- Utilities to work with asynchronous callback-style control flow.
@@ -58,7 +44,7 @@
 </span><span class="comment">-- behavior, unless explicitly documented by the calling function.
 </span><span class="comment">--
 </span><span class="comment">-- @module async
-</span><span class="comment">-- @license GPLv3-or-later
+</span><span class="comment">-- @license GPL v3.0
 </span><span class="comment">---------------------------------------------------------------------------
 </span>
 <span class="keyword">local</span> util = <span class="global">require</span>(<span class="string">"async.internal.util"</span>)
@@ -129,10 +115,11 @@
 </span><span class="comment">--
 </span><span class="comment">-- All tasks must adhere to the callback signature: `function(err, ...)`.
 </span><span class="comment">--
+</span><span class="comment">-- @async
 </span><span class="comment">-- @tparam table tasks The asynchronous tasks to execute in series.
 </span><span class="comment">-- @tparam function final_callback Called when all tasks have finished.
-</span><span class="comment">-- @asynctreturn any err The error returned by a failing task.
-</span><a id="89"></a><span class="comment">-- @asynctreturn any ... Values as returned by the last task.
+</span><span class="comment">-- @treturn any The error returned by a failing task.
+</span><a id="90"></a><span class="comment">-- @treturn any Values as returned by the last task.
 </span><span class="keyword">function</span> async.waterfall(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -177,9 +164,10 @@
 </span><span class="comment">-- If any task produces an error, `final_callback` will be called immediately
 </span><span class="comment">-- and remaining tasks will not be tracked.
 </span><span class="comment">--
+</span><span class="comment">-- @async
 </span><span class="comment">-- @tparam table tasks A list of asynchronous functions. They will be given a
 </span><span class="comment">--  callback parameter: `function(err, ...)`.
-</span><a id="136"></a><span class="comment">-- @tparam function final_callback
+</span><a id="138"></a><span class="comment">-- @tparam function final_callback
 </span><span class="keyword">function</span> async.all(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -231,35 +219,36 @@
 </span><span class="comment">--
 </span><span class="comment">-- The `results` table uses the task name as key and provides a `table.pack`ed list of task results as value.
 </span><span class="comment">--
-</span><span class="comment">-- **Example:**
-</span><span class="comment">--     async.dag(
-</span><span class="comment">--         {
-</span><span class="comment">--             get_data = { function(cb)
-</span><span class="comment">--                 local f = fs.open("/tmp/foo.txt")
-</span><span class="comment">--                 f:read(cb)
-</span><span class="comment">--             end },
-</span><span class="comment">--             make_folder = { function(cb)
-</span><span class="comment">--                 fs.make_folder("/tmp/bar", cb)
-</span><span class="comment">--             end },
-</span><span class="comment">--             write_data = { "get_data", "make_folder", function(results, cb)
-</span><span class="comment">--                 local data = table.unpack(results.get_data)
-</span><span class="comment">--                 local f = fs.open("/tmp/bar/foo.txt")
-</span><span class="comment">--                 f:write(data, cb)
-</span><span class="comment">--             end },
-</span><span class="comment">--         },
-</span><span class="comment">--         function(err, results)
-</span><span class="comment">--             if err ~= nil then
-</span><span class="comment">--                 error(err)
-</span><span class="comment">--             else
-</span><span class="comment">--                 print("success")
-</span><span class="comment">--             end
-</span><span class="comment">--         end
-</span><span class="comment">--     )
+</span><span class="comment">-- @usage
+</span><span class="comment">--    async.dag(
+</span><span class="comment">--        {
+</span><span class="comment">--            get_data = { function(cb)
+</span><span class="comment">--                local f = fs.open("/tmp/foo.txt")
+</span><span class="comment">--                f:read(cb)
+</span><span class="comment">--            end },
+</span><span class="comment">--            make_folder = { function(cb)
+</span><span class="comment">--                fs.make_folder("/tmp/bar", cb)
+</span><span class="comment">--            end },
+</span><span class="comment">--            write_data = { "get_data", "make_folder", function(results, cb)
+</span><span class="comment">--                local data = table.unpack(results.get_data)
+</span><span class="comment">--                local f = fs.open("/tmp/bar/foo.txt")
+</span><span class="comment">--                f:write(data, cb)
+</span><span class="comment">--            end },
+</span><span class="comment">--        },
+</span><span class="comment">--        function(err, results)
+</span><span class="comment">--            if err ~= nil then
+</span><span class="comment">--                error(err)
+</span><span class="comment">--            else
+</span><span class="comment">--                print("success")
+</span><span class="comment">--            end
+</span><span class="comment">--        end
+</span><span class="comment">--    )
 </span><span class="comment">--
+</span><span class="comment">-- @async
 </span><span class="comment">-- @tparam table tasks A map of asynchronous tasks.
 </span><span class="comment">-- @tparam function final_callback
-</span><span class="comment">-- @asynctreturn any err Any error from a failing task.
-</span><a id="216"></a><span class="comment">-- @asynctreturn table results Results of all resolved tasks.
+</span><span class="comment">-- @treturn any Any error from a failing task.
+</span><a id="219"></a><span class="comment">-- @treturn table Results of all resolved tasks.
 </span><span class="keyword">function</span> async.dag(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -388,13 +377,14 @@
 </span><span class="comment">-- This is, in concept, analogous to a `do {} while ()` construct, where `iteratee`
 </span><span class="comment">-- is the `do` block and `test` is the `while` test.
 </span><span class="comment">--
+</span><span class="comment">-- @async
 </span><span class="comment">-- @tparam function iteratee Called repeatedly. Signature: `function(cb)`.
 </span><span class="comment">-- @tparam function test Called once per iteration, after `iteratee`.
 </span><span class="comment">--  Signature: `function(..., cb)`.
 </span><span class="comment">-- @tparam function final_callback Called once, when `test` indicates to stop
 </span><span class="comment">--  the iteration.
-</span><span class="comment">-- @asynctreturn any err Any error from `iteratee` or `test`.
-</span><a id="351"></a><span class="comment">-- @asynctreturn any ... Values passed by the most recent execution of `iteratee`.
+</span><span class="comment">-- @treturn any Any error from `iteratee` or `test`.
+</span><a id="355"></a><span class="comment">-- @treturn any Values passed by the most recent execution of `iteratee`.
 </span><span class="keyword">function</span> async.do_while(iteratee, test, final_callback)
     final_callback = async.once(final_callback)
     <span class="keyword">local</span> results = {}
@@ -446,7 +436,7 @@
 </span><span class="comment">-- @tparam[opt] table object The object to call the method on.
 </span><span class="comment">-- @tparam function fn The function to wrap.
 </span><span class="comment">-- @tparam any ... Arbitrary arguments to pass through to the wrapped function.
-</span><a id="403"></a><span class="comment">-- @treturn function
+</span><a id="407"></a><span class="comment">-- @treturn function
 </span><span class="keyword">function</span> async.callback(object, fn, ...)
     <span class="keyword">local</span> outer = <span class="global">table</span>.pack(...)
 
@@ -461,14 +451,15 @@
 <span class="keyword">end</span>
 
 <span class="keyword">return</span> async</pre>
+</div>
+    </section>
+</div>
 
+<footer class="footer">
+    <div class="content has-text-centered">
+        Generated by <a href="https://github/com/stevendonovan/LDoc">LDoc 1.4.6</a>, designed with <a href="https://github.com/jgthms/bulma">Bulma</a>. Last updated at 2022-03-06 17:09:38.
+    </div>
+</footer>
 
-</div> <!-- id="content" -->
-</div> <!-- id="main" -->
-<div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-03-04 12:48:52 </i>
-</div> <!-- id="about" -->
-</div> <!-- id="container" -->
 </body>
 </html>

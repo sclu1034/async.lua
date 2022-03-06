@@ -1,55 +1,41 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>async.lua</title>
     <link rel="stylesheet" href="ldoc.css" type="text/css" />
 </head>
 <body>
 
-<div id="container">
 
-<div id="product">
-	<div id="product_logo"></div>
-	<div id="product_name"><big><b></b></big></div>
-	<div id="product_description"></div>
-</div> <!-- id="product" -->
-
-
-<div id="main">
-
-
-<!-- Menu -->
-
-<div id="navigation">
-<br/>
-<h1>async.lua</h1>
-
-
-
-<h2>Contents</h2>
-<ul>
-<li><a href="#Functions">Functions</a></li>
-</ul>
-
-
-<h2>Modules</h2>
-<ul class="nowrap">
-  <li><strong>async</strong></li>
-</ul>
-<h2>Source</h2>
-<ul class="nowrap">
-  <li><a href="source/async.lua.html">async.lua</a></li>
-</ul>
-
-</div>
-
-<div id="content">
-
-<h1>Module <code>async</code></h1>
-<p>Utilities to work with asynchronous callback-style control flow.</p>
-<p> All callbacks must adhere to the callback signature: <code>function(err, values...)</code>.
+<aside id="sidebar" class="has-background-white-ter">
+    <h1 class="title">async.lua</h1>
+    <nav class="menu">
+        <p class="menu-label">Modules</p>
+        <ul class="menu-list">
+            <li>
+                <a class="is-active">async</a>
+                <ul>
+                    <li><a href="#toc">Table of contents</a></li>
+                    <li><a href="#Functions">Functions</a></li>
+                </ul>
+            </li>
+        </ul>
+        <p class="menu-label">Source</p>
+        <ul class="menu-list">
+            <li><a href="source/async.lua.html">async.lua</a></li>
+        </ul>
+    </nav>
+</aside>
+<div id="content" class="content__wrapper">
+    <section class="section section__module-description">
+        <div class="container">
+            <h1 class="title is-1">Module <em>async</em></h1>
+            <h3 class="subtitle is-3">Utilities to work with asynchronous callback-style control flow.</h3>
+            <div class="content">
+                <p> All callbacks must adhere to the callback signature: <code>function(err, values...)</code>.
  The first parameter is the error value. It will be <code>nil</code> if no error ocurred, otherwise
  the error value depends on the function that the callback was passed to.
  If no error ocurred, an arbitrary number of return values may be received as second parameter and onward.</p>
@@ -57,127 +43,169 @@
 <p> Depending on the particular implementation of a function that a callback is passed to, it may be possible to
  receive non-<code>nil</code> return values, even when an error ocurred. Using such return values should be considered undefined
  behavior, unless explicitly documented by the calling function.</p>
-    <h3>Info:</h3>
-    <ul>
-        <li><strong>License</strong>: GPLv3-or-later</li>
-    </ul>
+            </div>
+            <div class="field is-grouped is-grouped-multiline">
+                <div class="control">
+                    <div class="tags are-medium has-addons">
+                        <span class="is-dark tag">License</span>
+                        <span class="tag">GPL v3.0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="section section__module-summary">
+        <div class="container">
+            <h2 id="toc" class="title is-3">Table of contents</h2>
+            <h3 class="title is-4"><a href="#Functions">Functions</a></h3>
+            <table class="table is-fullwidth is-striped">
+                <tbody>
+                    <tr>
+                        <td class="name"><a href="#once">once([fn])</a></td>
+                        <td class="summary">Wraps a function such that it can only ever be called once.</td>
+                    </tr>
+                    <tr>
+                        <td class="name"><a href="#wrap_sync">wrap_sync(fn)</a></td>
+                        <td class="summary">Turns an asynchronous function into a blocking operation.</td>
+                    </tr>
+                    <tr>
+                        <td class="name"><a href="#waterfall">waterfall(tasks, final_callback)</a></td>
+                        <td class="summary">Executes a list of asynchronous functions in series.</td>
+                    </tr>
+                    <tr>
+                        <td class="name"><a href="#all">all(tasks, final_callback)</a></td>
+                        <td class="summary">Runs all tasks in parallel and collects the results.</td>
+                    </tr>
+                    <tr>
+                        <td class="name"><a href="#dag">dag(tasks, final_callback)</a></td>
+                        <td class="summary">Resolves a DAG (Directed Acyclic Graph) of asynchronous dependencies.</td>
+                    </tr>
+                    <tr>
+                        <td class="name"><a href="#do_while">do_while(iteratee, test, final_callback)</a></td>
+                        <td class="summary">Repeatedly calls <code>test</code> and <code>iteratee</code> until stopped.</td>
+                    </tr>
+                    <tr>
+                        <td class="name"><a href="#callback">callback([object], fn, ...)</a></td>
+                        <td class="summary">Wrap a function with arguments for use as callback.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
 
+    <section class="section section--Functions">
+        <div class="container">
+            <h2 class="title is-2" id="Functions"><a href="#Functions">Functions</a></h2>
+            <div class="section__content">
+                <div id="once" class="box section__item">
+                    <div class="block section__item__title">
+                        <strong>once([fn])</strong>
+                        <a class="source-ref" href="source/async.lua.html#30">line 30</a>
+                    </div>
 
-<h2><a href="#Functions">Functions</a></h2>
-<table class="function_list">
-	<tr>
-	<td class="name" ><a href="#once">once([fn])</a></td>
-	<td class="summary">Wraps a function such that it can only ever be called once.</td>
-	</tr>
-	<tr>
-	<td class="name" ><a href="#wrap_sync">wrap_sync(fn)</a></td>
-	<td class="summary">Turns an asynchronous function into a blocking operation.</td>
-	</tr>
-	<tr>
-	<td class="name" ><a href="#waterfall">waterfall(tasks, final_callback)</a></td>
-	<td class="summary">Executes a list of asynchronous functions in series.</td>
-	</tr>
-	<tr>
-	<td class="name" ><a href="#all">all(tasks, final_callback)</a></td>
-	<td class="summary">Runs all tasks in parallel and collects the results.</td>
-	</tr>
-	<tr>
-	<td class="name" ><a href="#dag">dag(tasks, final_callback)</a></td>
-	<td class="summary">Resolves a DAG (Directed Acyclic Graph) of asynchronous dependencies.</td>
-	</tr>
-	<tr>
-	<td class="name" ><a href="#do_while">do_while(iteratee, test, final_callback)</a></td>
-	<td class="summary">Repeatedly calls <code>test</code> and <code>iteratee</code> until stopped.</td>
-	</tr>
-	<tr>
-	<td class="name" ><a href="#callback">callback([object], fn, ...)</a></td>
-	<td class="summary">Wrap a function with arguments for use as callback.</td>
-	</tr>
-</table>
-
-<br/>
-<br/>
-
-
-    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
-
-    <dl class="function">
-    <dt>
-    <a name = "once"></a>
-    <strong>once([fn])</strong>
-    <a style="float:right;" href="source/async.lua.html#30">line 30</a>
-    </dt>
-    <dd>
-    Wraps a function such that it can only ever be called once. </p>
+                    <div class="block content section__item__description">Wraps a function such that it can only ever be called once. </p>
 
 <p> If the returned function is called multiple times, only the first call will result
  in the wrapped function being called. Subsequent calls will be ignored.
- If no function is given, a noop function will be used.
+ If no function is given, a noop function will be used.</div>
 
-    </ul>
+                    <div class="block content section__item__params">
+                        <h4 class="title is-6">Parameters:</h4>
+                        <ul>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>fn</em></span>
+                                    <span class="parameter__description">:&nbsp; The function to wrap.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                    <div class="control">
+                                        <div class="tags">
+                                            <span class="tag">optional</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">fn</span>
-            <span class="types"><span class="type">function</span></span>
-         The function to wrap.
-         (<em>optional</em>)
-        </li>
-    </ul>
+                        </ul>
+                    </div>
+                    <div class="block content section__item__returns">
+                        <h4 class="title is-6">Returns:</h4>
+                        <ul>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>The wrapped function or a noop.</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">function</span></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="wrap_sync" class="box section__item">
+                    <div class="block section__item__title">
+                        <strong>wrap_sync(fn)</strong>
+                        <a class="source-ref" href="source/async.lua.html#56">line 56</a>
+                    </div>
 
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">function</span></span>
-        The wrapped function or a noop.
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "wrap_sync"></a>
-    <strong>wrap_sync(fn)</strong>
-    <a style="float:right;" href="source/async.lua.html#56">line 56</a>
-    </dt>
-    <dd>
-    Turns an asynchronous function into a blocking operation. </p>
+                    <div class="block content section__item__description">Turns an asynchronous function into a blocking operation. </p>
 
 <p> Using coroutines, this runs a callback-style asynchronous function and blocks until it completes.
  The function to be wrapped may only accept a single parameter: a callback function.
  Return values passed to this callback will be returned as regular values by <code>wrap_sync</code>.</p>
 
-<p> Panics that happened inside the asynchronous function will be captured and re-thrown.
+<p> Panics that happened inside the asynchronous function will be captured and re-thrown.</div>
 
-    </ul>
+                    <div class="block content section__item__params">
+                        <h4 class="title is-6">Parameters:</h4>
+                        <ul>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>fn</em></span>
+                                    <span class="parameter__description">:&nbsp; An asynchronous function: <code>function(cb)</code></span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">fn</span>
-            <span class="types"><span class="type">function</span></span>
-         An asynchronous function: <code>function(cb)</code>
-        </li>
-    </ul>
+                        </ul>
+                    </div>
+                    <div class="block content section__item__returns">
+                        <h4 class="title is-6">Returns:</h4>
+                        <ul>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>Any return values as passed by the wrapped function</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">any</span></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="waterfall" class="box section__item">
+                    <div class="block section__item__title">
+                        <strong>waterfall(tasks, final_callback)</strong>
+                        <a class="source-ref" href="source/async.lua.html#90">line 90</a>
+                        <span class="tag">async</span>
+                    </div>
 
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><span class="type">any</span></span>
-        Any return values as passed by the wrapped function
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "waterfall"></a>
-    <strong>waterfall(tasks, final_callback)</strong>
-    <a style="float:right;" href="source/async.lua.html#89">line 89</a>
-    </dt>
-    <dd>
-    Executes a list of asynchronous functions in series. </p>
+                    <div class="block content section__item__description">Executes a list of asynchronous functions in series. </p>
 
 <p> <code>waterfall</code> accepts an arbitrary list of asynchronous functions (tasks) and calls them in series.
  Each function waits for the previous one to finish and will be given the previous function&rsquo;s return values.</p>
@@ -187,70 +215,121 @@
  If all tasks complete successfully, the final callback will be called with the return values of the last
  task in the list.</p>
 
-<p> All tasks must adhere to the callback signature: <code>function(err, ...)</code>.
+<p> All tasks must adhere to the callback signature: <code>function(err, ...)</code>.</div>
 
-    <h3>Callback parameters:</h3>
-    <ul>
-         <li><span class="parameter">err</span> <span class="types">any</span> <span>The error returned by a failing task.</span></li>
-         <li><span class="parameter">...</span> <span class="types">any</span> <span>Values as returned by the last task.</span></li>
-    </ul>
+                    <div class="block content section__item__params">
+                        <h4 class="title is-6">Parameters:</h4>
+                        <ul>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>tasks</em></span>
+                                    <span class="parameter__description">:&nbsp; The asynchronous tasks to execute in series.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>final_callback</em></span>
+                                    <span class="parameter__description">:&nbsp; Called when all tasks have finished.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">tasks</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
-         The asynchronous tasks to execute in series.
-        </li>
-        <li><span class="parameter">final_callback</span>
-            <span class="types"><span class="type">function</span></span>
-         Called when all tasks have finished.
-        </li>
-    </ul>
+                        </ul>
+                    </div>
+                    <div class="block content section__item__returns">
+                        <h4 class="title is-6">Callback parameters:</h4>
+                        <ul>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>The error returned by a failing task.</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">any</span></span>
+                                </div>
+                            </li>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>Values as returned by the last task.</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">any</span></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="all" class="box section__item">
+                    <div class="block section__item__title">
+                        <strong>all(tasks, final_callback)</strong>
+                        <a class="source-ref" href="source/async.lua.html#138">line 138</a>
+                        <span class="tag">async</span>
+                    </div>
 
-
-
-
-
-</dd>
-    <dt>
-    <a name = "all"></a>
-    <strong>all(tasks, final_callback)</strong>
-    <a style="float:right;" href="source/async.lua.html#136">line 136</a>
-    </dt>
-    <dd>
-    Runs all tasks in parallel and collects the results. </p>
+                    <div class="block content section__item__description">Runs all tasks in parallel and collects the results. </p>
 
 <p> If any task produces an error, <code>final_callback</code> will be called immediately
- and remaining tasks will not be tracked.
+ and remaining tasks will not be tracked.</div>
 
-    </ul>
+                    <div class="block content section__item__params">
+                        <h4 class="title is-6">Parameters:</h4>
+                        <ul>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>tasks</em></span>
+                                    <span class="parameter__description">:&nbsp; A list of asynchronous functions. They will be given a
+  callback parameter: <code>function(err, ...)</code>.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>final_callback</em></span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">tasks</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
-         A list of asynchronous functions. They will be given a
-  callback parameter: <code>function(err, ...)</code>.
-        </li>
-        <li><span class="parameter">final_callback</span>
-            <span class="types"><span class="type">function</span></span>
+                        </ul>
+                    </div>
+                </div>
+                <div id="dag" class="box section__item">
+                    <div class="block section__item__title">
+                        <strong>dag(tasks, final_callback)</strong>
+                        <a class="source-ref" href="source/async.lua.html#219">line 219</a>
+                        <span class="tag">async</span>
+                    </div>
 
-
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "dag"></a>
-    <strong>dag(tasks, final_callback)</strong>
-    <a style="float:right;" href="source/async.lua.html#216">line 216</a>
-    </dt>
-    <dd>
-    <p>Resolves a DAG (Directed Acyclic Graph) of asynchronous dependencies. </p>
+                    <div class="block content section__item__description">Resolves a DAG (Directed Acyclic Graph) of asynchronous dependencies. </p>
 
 <p> The task list is a key-value map, where the key defines the task name and the value the is the task definition.
  A task definition consists of a a list of dependencies (which may be empty) and an asynchronous
@@ -263,67 +342,99 @@
  is called with that error value. Otherwise, <code>final_callback</code> will be called once all tasks have completed, with the
  results of all tasks.</p>
 
-<p> The <code>results</code> table uses the task name as key and provides a <code>table.pack</code>ed list of task results as value.</p>
+<p> The <code>results</code> table uses the task name as key and provides a <code>table.pack</code>ed list of task results as value.</div>
 
-<p> <strong>Example:</strong></p>
+                    <div class="block content section__item__params">
+                        <h4 class="title is-6">Parameters:</h4>
+                        <ul>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>tasks</em></span>
+                                    <span class="parameter__description">:&nbsp; A map of asynchronous tasks.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>final_callback</em></span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
 
-<pre><code> async.dag(
-     {
-         get_data = { function(cb)
-             local f = fs.open("/tmp/foo.txt")
-             f:read(cb)
-         end },
-         make_folder = { function(cb)
-             fs.make_folder("/tmp/bar", cb)
-         end },
-         write_data = { "get_data", "make_folder", function(results, cb)
-             local data = table.unpack(results.get_data)
-             local f = fs.open("/tmp/bar/foo.txt")
-             f:write(data, cb)
-         end },
-     },
-     function(err, results)
-         if err ~= nil then
-             error(err)
-         else
-             print("success")
-         end
-     end
- )
-</code></pre>
+                        </ul>
+                    </div>
+                    <div class="block content section__item__returns">
+                        <h4 class="title is-6">Callback parameters:</h4>
+                        <ul>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>Any error from a failing task.</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">any</span></span>
+                                </div>
+                            </li>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>Results of all resolved tasks.</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="block content section__item__usage">
+                        <h4 class="title is-6">Usage:</h4>
+                            <pre class="code-block code-block--lua">async.dag(
+    {
+        get_data = { <span class="keyword">function</span>(cb)
+            <span class="keyword">local</span> f = fs.open(<span class="string">"/tmp/foo.txt"</span>)
+            f:read(cb)
+        <span class="keyword">end</span> },
+        make_folder = { <span class="keyword">function</span>(cb)
+            fs.make_folder(<span class="string">"/tmp/bar"</span>, cb)
+        <span class="keyword">end</span> },
+        write_data = { <span class="string">"get_data"</span>, <span class="string">"make_folder"</span>, <span class="keyword">function</span>(results, cb)
+            <span class="keyword">local</span> data = <span class="global">table</span>.<span class="global">unpack</span>(results.get_data)
+            <span class="keyword">local</span> f = fs.open(<span class="string">"/tmp/bar/foo.txt"</span>)
+            f:write(data, cb)
+        <span class="keyword">end</span> },
+    },
+    <span class="keyword">function</span>(err, results)
+        <span class="keyword">if</span> err ~= <span class="keyword">nil</span> <span class="keyword">then</span>
+            <span class="global">error</span>(err)
+        <span class="keyword">else</span>
+            <span class="global">print</span>(<span class="string">"success"</span>)
+        <span class="keyword">end</span>
+    <span class="keyword">end</span>
+)</pre>
+                    </div>
+                </div>
+                <div id="do_while" class="box section__item">
+                    <div class="block section__item__title">
+                        <strong>do_while(iteratee, test, final_callback)</strong>
+                        <a class="source-ref" href="source/async.lua.html#355">line 355</a>
+                        <span class="tag">async</span>
+                    </div>
 
-
-    <h3>Callback parameters:</h3>
-    <ul>
-         <li><span class="parameter">err</span> <span class="types">any</span> <span>Any error from a failing task.</span></li>
-         <li><span class="parameter">results</span> <span class="types"><a href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span> <span>Results of all resolved tasks.</span></li>
-    </ul>
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">tasks</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
-         A map of asynchronous tasks.
-        </li>
-        <li><span class="parameter">final_callback</span>
-            <span class="types"><span class="type">function</span></span>
-
-
-        </li>
-    </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "do_while"></a>
-    <strong>do_while(iteratee, test, final_callback)</strong>
-    <a style="float:right;" href="source/async.lua.html#351">line 351</a>
-    </dt>
-    <dd>
-    Repeatedly calls <code>test</code> and <code>iteratee</code> until stopped. </p>
+                    <div class="block content section__item__description">Repeatedly calls <code>test</code> and <code>iteratee</code> until stopped. </p>
 
 <p> <code>iteratee</code> is called repeatedly. It is passed a callback
  (<code>function(err, ...)</code>), which should be called with either an error or any
@@ -339,44 +450,89 @@
  <code>iteratee</code>.</p>
 
 <p> This is, in concept, analogous to a <code>do {} while ()</code> construct, where <code>iteratee</code>
- is the <code>do</code> block and <code>test</code> is the <code>while</code> test.
+ is the <code>do</code> block and <code>test</code> is the <code>while</code> test.</div>
 
-    <h3>Callback parameters:</h3>
-    <ul>
-         <li><span class="parameter">err</span> <span class="types">any</span> <span>Any error from <code>iteratee</code> or <code>test</code>.</span></li>
-         <li><span class="parameter">...</span> <span class="types">any</span> <span>Values passed by the most recent execution of <code>iteratee</code>.</span></li>
-    </ul>
+                    <div class="block content section__item__params">
+                        <h4 class="title is-6">Parameters:</h4>
+                        <ul>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>iteratee</em></span>
+                                    <span class="parameter__description">:&nbsp; Called repeatedly. Signature: <code>function(cb)</code>.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>test</em></span>
+                                    <span class="parameter__description">:&nbsp; Called once per iteration, after <code>iteratee</code>.
+  Signature: <code>function(..., cb)</code>.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>final_callback</em></span>
+                                    <span class="parameter__description">:&nbsp; Called once, when <code>test</code> indicates to stop
+  the iteration.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">iteratee</span>
-            <span class="types"><span class="type">function</span></span>
-         Called repeatedly. Signature: <code>function(cb)</code>.
-        </li>
-        <li><span class="parameter">test</span>
-            <span class="types"><span class="type">function</span></span>
-         Called once per iteration, after <code>iteratee</code>.
-  Signature: <code>function(..., cb)</code>.
-        </li>
-        <li><span class="parameter">final_callback</span>
-            <span class="types"><span class="type">function</span></span>
-         Called once, when <code>test</code> indicates to stop
-  the iteration.
-        </li>
-    </ul>
+                        </ul>
+                    </div>
+                    <div class="block content section__item__returns">
+                        <h4 class="title is-6">Callback parameters:</h4>
+                        <ul>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>Any error from <code>iteratee</code> or <code>test</code>.</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">any</span></span>
+                                </div>
+                            </li>
+                            <li class="return-value">
+                                <div class="return-value__description">
+                                    <span>Values passed by the most recent execution of <code>iteratee</code>.</span>
+                                </div>
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">any</span></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div id="callback" class="box section__item">
+                    <div class="block section__item__title">
+                        <strong>callback([object], fn, ...)</strong>
+                        <a class="source-ref" href="source/async.lua.html#407">line 407</a>
+                    </div>
 
-
-
-
-
-</dd>
-    <dt>
-    <a name = "callback"></a>
-    <strong>callback([object], fn, ...)</strong>
-    <a style="float:right;" href="source/async.lua.html#403">line 403</a>
-    </dt>
-    <dd>
-    Wrap a function with arguments for use as callback. </p>
+                    <div class="block content section__item__description">Wrap a function with arguments for use as callback. </p>
 
 <p> This may be used to wrap a function or table method as a callback, providing a (partial)
  argument list.
@@ -384,48 +540,83 @@
  arguments from the final caller are appended after those.</p>
 
 <p> If the function is actually a method (i.e. it expects a <code>self</code> parameter or is called with <code>:</code>),
- the <code>self</code> table can be passed as the first argument. Otherwise, <code>nil</code> should be passed.
+ the <code>self</code> table can be passed as the first argument. Otherwise, <code>nil</code> should be passed.</div>
 
-    </ul>
+                    <div class="block content section__item__params">
+                        <h4 class="title is-6">Parameters:</h4>
+                        <ul>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>object</em></span>
+                                    <span class="parameter__description">:&nbsp; The object to call the method on.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
+                                        </div>
+                                    </div>
+                                    <div class="control">
+                                        <div class="tags">
+                                            <span class="tag">optional</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>fn</em></span>
+                                    <span class="parameter__description">:&nbsp; The function to wrap.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">function</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="parameter">
+                                <div>
+                                    <span class="parameter__name"><em>...</em></span>
+                                    <span class="parameter__description">:&nbsp; Arbitrary arguments to pass through to the wrapped function.</span>
+                                </div>
+                                <div class="field is-grouped is-grouped-multiline parameter__tags">
+                                    <div class="control">
+                                        <div class="tags has-addons">
+                                            <span class="tag is-dark">type</span>
+                                            <span class="tag"><span class="type">any</span></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
 
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">object</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.1/manual.html#5.5">table</a></span>
-         The object to call the method on.
-         (<em>optional</em>)
-        </li>
-        <li><span class="parameter">fn</span>
-            <span class="types"><span class="type">function</span></span>
-         The function to wrap.
-        </li>
-        <li><span class="parameter">...</span>
-            <span class="types"><span class="type">any</span></span>
-         Arbitrary arguments to pass through to the wrapped function.
-        </li>
-    </ul>
+                        </ul>
+                    </div>
+                    <div class="block content section__item__returns">
+                        <h4 class="title is-6">Returns:</h4>
+                        <ul>
+                            <li class="return-value">
+                                <div class="tags has-addons">
+                                    <span class="tag is-dark">type</span>
+                                    <span class="tag return-value__type"><span class="type">function</span></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 
-    <h3>Returns:</h3>
-    <ol>
+<footer class="footer">
+    <div class="content has-text-centered">
+        Generated by <a href="https://github/com/stevendonovan/LDoc">LDoc 1.4.6</a>, designed with <a href="https://github.com/jgthms/bulma">Bulma</a>. Last updated at 2022-03-06 17:09:38.
+    </div>
+</footer>
 
-           <span class="types"><span class="type">function</span></span>
-
-
-    </ol>
-
-
-
-
-</dd>
-</dl>
-
-
-</div> <!-- id="content" -->
-</div> <!-- id="main" -->
-<div id="about">
-<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2022-03-04 12:48:52 </i>
-</div> <!-- id="about" -->
-</div> <!-- id="container" -->
 </body>
 </html>
