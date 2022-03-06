@@ -3,10 +3,10 @@ local out_file = io.open(arg[2], "w+")
 
 local function read_example(path)
     local f = io.open(string.format("./examples/%s.lua", path))
-    local content = {"-- **Example:**"}
+    local content = {"-- @usage"}
 
     for line in f:lines() do
-        table.insert(content, string.format("--     %s", line))
+        table.insert(content, string.format("--    %s", line))
     end
 
     return table.concat(content, "\n")

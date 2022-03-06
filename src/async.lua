@@ -11,7 +11,7 @@
 -- behavior, unless explicitly documented by the calling function.
 --
 -- @module async
--- @license GPLv3-or-later
+-- @license GPL v3.0
 ---------------------------------------------------------------------------
 
 local util = require("async.internal.util")
@@ -82,10 +82,11 @@ end
 --
 -- All tasks must adhere to the callback signature: `function(err, ...)`.
 --
+-- @async
 -- @tparam table tasks The asynchronous tasks to execute in series.
 -- @tparam function final_callback Called when all tasks have finished.
--- @asynctreturn any err The error returned by a failing task.
--- @asynctreturn any ... Values as returned by the last task.
+-- @treturn any The error returned by a failing task.
+-- @treturn any Values as returned by the last task.
 function async.waterfall(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -130,6 +131,7 @@ end
 -- If any task produces an error, `final_callback` will be called immediately
 -- and remaining tasks will not be tracked.
 --
+-- @async
 -- @tparam table tasks A list of asynchronous functions. They will be given a
 --  callback parameter: `function(err, ...)`.
 -- @tparam function final_callback
@@ -186,10 +188,11 @@ end
 --
 -- <%EXAMPLE_dag%>
 --
+-- @async
 -- @tparam table tasks A map of asynchronous tasks.
 -- @tparam function final_callback
--- @asynctreturn any err Any error from a failing task.
--- @asynctreturn table results Results of all resolved tasks.
+-- @treturn any Any error from a failing task.
+-- @treturn table Results of all resolved tasks.
 function async.dag(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -318,13 +321,14 @@ end
 -- This is, in concept, analogous to a `do {} while ()` construct, where `iteratee`
 -- is the `do` block and `test` is the `while` test.
 --
+-- @async
 -- @tparam function iteratee Called repeatedly. Signature: `function(cb)`.
 -- @tparam function test Called once per iteration, after `iteratee`.
 --  Signature: `function(..., cb)`.
 -- @tparam function final_callback Called once, when `test` indicates to stop
 --  the iteration.
--- @asynctreturn any err Any error from `iteratee` or `test`.
--- @asynctreturn any ... Values passed by the most recent execution of `iteratee`.
+-- @treturn any Any error from `iteratee` or `test`.
+-- @treturn any Values passed by the most recent execution of `iteratee`.
 function async.do_while(iteratee, test, final_callback)
     final_callback = async.once(final_callback)
     local results = {}
