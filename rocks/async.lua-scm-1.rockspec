@@ -2,7 +2,7 @@ package = "async.lua"
 version = "scm-1"
 
 source = {
-    url = "git+http://github.com/sclu1034/async.lua.git",
+    url = "git+https://github.com/sclu1034/async.lua.git",
     branch = "master"
 }
 
