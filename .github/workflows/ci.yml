@@ -2,7 +2,7 @@ name: Lint & Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [ staging, trying ]
   pull_request:
       branches: [ master ]
 
