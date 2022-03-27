@@ -48,6 +48,8 @@
 </span><span class="comment">---------------------------------------------------------------------------
 </span>
 <span class="keyword">local</span> util = <span class="global">require</span>(<span class="string">"async.internal.util"</span>)
+<span class="keyword">local</span> pack = <span class="global">table</span>.pack <span class="keyword">or</span> <span class="keyword">function</span>(...) <span class="keyword">return</span> {...} <span class="keyword">end</span>
+<span class="keyword">local</span> <span class="global">unpack</span> = <span class="global">table</span>.<span class="global">unpack</span> <span class="keyword">or</span> <span class="global">unpack</span>
 
 <span class="keyword">local</span> async = {}
 
@@ -59,7 +61,7 @@
 </span><span class="comment">-- If no function is given, a noop function will be used.
 </span><span class="comment">--
 </span><span class="comment">-- @tparam[opt] function fn The function to wrap.
-</span><a id="30"></a><span class="comment">-- @treturn function The wrapped function or a noop.
+</span><a id="32"></a><span class="comment">-- @treturn function The wrapped function or a noop.
 </span><span class="keyword">function</span> async.once(fn)
     <span class="keyword">if</span> <span class="keyword">not</span> fn <span class="keyword">then</span>
         fn = <span class="keyword">function</span>() <span class="keyword">end</span>
@@ -85,7 +87,7 @@
 </span><span class="comment">-- Panics that happened inside the asynchronous function will be captured and re-thrown.
 </span><span class="comment">--
 </span><span class="comment">-- @tparam function fn An asynchronous function: `function(cb)`
-</span><a id="56"></a><span class="comment">-- @treturn any Any return values as passed by the wrapped function
+</span><a id="58"></a><span class="comment">-- @treturn any Any return values as passed by the wrapped function
 </span><span class="keyword">function</span> async.wrap_sync(fn)
     <span class="keyword">local</span> co = <span class="global">coroutine</span>.create(<span class="keyword">function</span>()
         fn(<span class="keyword">function</span>(...)
@@ -93,12 +95,12 @@
         <span class="keyword">end</span>)
     <span class="keyword">end</span>)
 
-    <span class="keyword">local</span> ret = <span class="global">table</span>.pack(<span class="global">coroutine</span>.resume(co))
+    <span class="keyword">local</span> ret = pack(<span class="global">coroutine</span>.resume(co))
     <span class="keyword">if</span> <span class="keyword">not</span> ret[<span class="number">1</span>] <span class="keyword">then</span>
         <span class="global">error</span>(ret[<span class="number">2</span>])
     <span class="keyword">else</span>
         <span class="global">table</span>.remove(ret, <span class="number">1</span>)
-        <span class="keyword">return</span> <span class="global">table</span>.<span class="global">unpack</span>(ret)
+        <span class="keyword">return</span> <span class="global">unpack</span>(ret)
     <span class="keyword">end</span>
 <span class="keyword">end</span>
 
@@ -119,7 +121,7 @@
 </span><span class="comment">-- @tparam table tasks The asynchronous tasks to execute in series.
 </span><span class="comment">-- @tparam function final_callback Called when all tasks have finished.
 </span><span class="comment">-- @treturn any The error returned by a failing task.
-</span><a id="90"></a><span class="comment">-- @treturn any Values as returned by the last task.
+</span><a id="92"></a><span class="comment">-- @treturn any Values as returned by the last task.
 </span><span class="keyword">function</span> async.waterfall(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -137,9 +139,9 @@
         i = i + <span class="number">1</span>
         <span class="keyword">local</span> task = tasks[i]
         <span class="keyword">if</span> task <span class="keyword">then</span>
-            <span class="keyword">local</span> args = <span class="global">table</span>.pack(...)
+            <span class="keyword">local</span> args = pack(...)
             <span class="global">table</span>.insert(args, _continue)
-            task(<span class="global">table</span>.<span class="global">unpack</span>(args))
+            task(<span class="global">unpack</span>(args))
         <span class="keyword">else</span>
             <span class="comment">-- We've reached the bottom of the waterfall, time to exit
 </span>            final_callback(<span class="keyword">nil</span>, ...)
@@ -167,7 +169,7 @@
 </span><span class="comment">-- @async
 </span><span class="comment">-- @tparam table tasks A list of asynchronous functions. They will be given a
 </span><span class="comment">--  callback parameter: `function(err, ...)`.
-</span><a id="138"></a><span class="comment">-- @tparam function final_callback
+</span><a id="140"></a><span class="comment">-- @tparam function final_callback
 </span><span class="keyword">function</span> async.all(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -194,7 +196,7 @@
             <span class="keyword">end</span>
 
             done = done + <span class="number">1</span>
-            results[i] = <span class="global">table</span>.pack(...)
+            results[i] = pack(...)
 
             <span class="keyword">if</span> done == len <span class="keyword">then</span>
                 final_callback(<span class="keyword">nil</span>, results)
@@ -248,7 +250,7 @@
 </span><span class="comment">-- @tparam table tasks A map of asynchronous tasks.
 </span><span class="comment">-- @tparam function final_callback
 </span><span class="comment">-- @treturn any Any error from a failing task.
-</span><a id="219"></a><span class="comment">-- @treturn table Results of all resolved tasks.
+</span><a id="221"></a><span class="comment">-- @treturn table Results of all resolved tasks.
 </span><span class="keyword">function</span> async.dag(tasks, final_callback)
     final_callback = async.once(final_callback)
 
@@ -342,7 +344,7 @@
                     <span class="keyword">return</span>
                 <span class="keyword">end</span>
 
-                results[name] = <span class="global">table</span>.pack(...)
+                results[name] = pack(...)
                 running = running - <span class="number">1</span>
 
                 <span class="comment">-- If all lists are empty, we must have run all tasks
@@ -384,7 +386,7 @@
 </span><span class="comment">-- @tparam function final_callback Called once, when `test` indicates to stop
 </span><span class="comment">--  the iteration.
 </span><span class="comment">-- @treturn any Any error from `iteratee` or `test`.
-</span><a id="355"></a><span class="comment">-- @treturn any Values passed by the most recent execution of `iteratee`.
+</span><a id="357"></a><span class="comment">-- @treturn any Values passed by the most recent execution of `iteratee`.
 </span><span class="keyword">function</span> async.do_while(iteratee, test, final_callback)
     final_callback = async.once(final_callback)
     <span class="keyword">local</span> results = {}
@@ -397,10 +399,10 @@
             <span class="keyword">return</span> final_callback(err)
         <span class="keyword">end</span>
 
-        results = <span class="global">table</span>.pack(...)
-        <span class="keyword">local</span> args = <span class="global">table</span>.pack(...)
+        results = pack(...)
+        <span class="keyword">local</span> args = pack(...)
         <span class="global">table</span>.insert(args, _next)
-        test(<span class="global">table</span>.<span class="global">unpack</span>(args))
+        test(<span class="global">unpack</span>(args))
     <span class="keyword">end</span>
 
     <span class="comment">-- Calls `iteratee` for the next iteration, unless stopped
@@ -410,7 +412,7 @@
         <span class="keyword">end</span>
 
         <span class="keyword">if</span> <span class="keyword">not</span> continue <span class="keyword">then</span>
-            <span class="keyword">return</span> final_callback(<span class="keyword">nil</span>, <span class="global">table</span>.<span class="global">unpack</span>(results))
+            <span class="keyword">return</span> final_callback(<span class="keyword">nil</span>, <span class="global">unpack</span>(results))
         <span class="keyword">end</span>
 
         iteratee(_test)
@@ -436,17 +438,17 @@
 </span><span class="comment">-- @tparam[opt] table object The object to call the method on.
 </span><span class="comment">-- @tparam function fn The function to wrap.
 </span><span class="comment">-- @tparam any ... Arbitrary arguments to pass through to the wrapped function.
-</span><a id="407"></a><span class="comment">-- @treturn function
+</span><a id="409"></a><span class="comment">-- @treturn function
 </span><span class="keyword">function</span> async.callback(object, fn, ...)
-    <span class="keyword">local</span> outer = <span class="global">table</span>.pack(...)
+    <span class="keyword">local</span> outer = pack(...)
 
     <span class="keyword">return</span> <span class="keyword">function</span>(...)
-        <span class="keyword">local</span> inner = <span class="global">table</span>.pack(...)
+        <span class="keyword">local</span> inner = pack(...)
         <span class="comment">-- Merge, then unpack both argument lists to provide a single var arg.
 </span>        <span class="keyword">local</span> args = { object }
         util.append(args, outer)
         util.append(args, inner)
-        <span class="keyword">return</span> fn(<span class="global">table</span>.<span class="global">unpack</span>(args))
+        <span class="keyword">return</span> fn(<span class="global">unpack</span>(args))
     <span class="keyword">end</span>
 <span class="keyword">end</span>
 
@@ -457,7 +459,7 @@
 
 <footer class="footer">
     <div class="content has-text-centered">
-        Generated by <a href="https://github/com/stevendonovan/LDoc">LDoc 1.4.6</a>, designed with <a href="https://github.com/jgthms/bulma">Bulma</a>. Last updated at 2022-03-27 13:38:51.
+        Generated by <a href="https://github/com/stevendonovan/LDoc">LDoc 1.4.6</a>, designed with <a href="https://github.com/jgthms/bulma">Bulma</a>. Last updated at 2022-03-27 13:47:43.
     </div>
 </footer>
 
