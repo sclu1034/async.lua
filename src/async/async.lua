@@ -15,6 +15,8 @@
 ---------------------------------------------------------------------------
 
 local util = require("async.internal.util")
+local pack = table.pack or function(...) return {...} end
+local unpack = table.unpack or unpack
 
 local async = {}
 
@@ -60,12 +62,12 @@ function async.wrap_sync(fn)
         end)
     end)
 
-    local ret = table.pack(coroutine.resume(co))
+    local ret = pack(coroutine.resume(co))
     if not ret[1] then
         error(ret[2])
     else
         table.remove(ret, 1)
-        return table.unpack(ret)
+        return unpack(ret)
     end
 end
 
@@ -104,9 +106,9 @@ function async.waterfall(tasks, final_callback)
         i = i + 1
         local task = tasks[i]
         if task then
-            local args = table.pack(...)
+            local args = pack(...)
             table.insert(args, _continue)
-            task(table.unpack(args))
+            task(unpack(args))
         else
             -- We've reached the bottom of the waterfall, time to exit
             final_callback(nil, ...)
@@ -161,7 +163,7 @@ function async.all(tasks, final_callback)
             end
 
             done = done + 1
-            results[i] = table.pack(...)
+            results[i] = pack(...)
 
             if done == len then
                 final_callback(nil, results)
@@ -286,7 +288,7 @@ function async.dag(tasks, final_callback)
                     return
                 end
 
-                results[name] = table.pack(...)
+                results[name] = pack(...)
                 running = running - 1
 
                 -- If all lists are empty, we must have run all tasks
@@ -341,10 +343,10 @@ function async.do_while(iteratee, test, final_callback)
             return final_callback(err)
         end
 
-        results = table.pack(...)
-        local args = table.pack(...)
+        results = pack(...)
+        local args = pack(...)
         table.insert(args, _next)
-        test(table.unpack(args))
+        test(unpack(args))
     end
 
     -- Calls `iteratee` for the next iteration, unless stopped
@@ -354,7 +356,7 @@ function async.do_while(iteratee, test, final_callback)
         end
 
         if not continue then
-            return final_callback(nil, table.unpack(results))
+            return final_callback(nil, unpack(results))
         end
 
         iteratee(_test)
@@ -382,15 +384,15 @@ end
 -- @tparam any ... Arbitrary arguments to pass through to the wrapped function.
 -- @treturn function
 function async.callback(object, fn, ...)
-    local outer = table.pack(...)
+    local outer = pack(...)
 
     return function(...)
-        local inner = table.pack(...)
+        local inner = pack(...)
         -- Merge, then unpack both argument lists to provide a single var arg.
         local args = { object }
         util.append(args, outer)
         util.append(args, inner)
-        return fn(table.unpack(args))
+        return fn(unpack(args))
     end
 end
 
